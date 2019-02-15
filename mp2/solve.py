@@ -104,6 +104,15 @@ def solveMatrix(A):
             for sol in solveMatrix(B):
                 yield [ansIndex] + sol
 
+def makeMatrix(board, pents):
+    """
+    Accept the borad matrix and pentomino list and construct the matrix to be solved.
+
+    Arguments:
+        board {np-ndarray} -- The borad.
+        pents {list} -- list of np-ndarray represent the possible pentominos.
+    """
+
 def solve(board, pents):
     """
     This is the function you will implement. It will take in a numpy array of the board
@@ -120,8 +129,13 @@ def solve(board, pents):
 
     raise NotImplementedError
 
-
-if __name__ == "__main__":
+def testSolveMatrix():
+    '''
+    Simple tests cases.
+    First = [-5, -1, -3]
+    Second = [-3, 0, -4]
+    Besed on referenced code.
+    '''
     # Given a 2D numpy array of 1 and 0, get its exact cover rows
     row0 = np.array([0, 0, 1, 1, 0, 0])
     row1 = np.array([1, 1, 0, 0, 0, 0])
@@ -143,3 +157,32 @@ if __name__ == "__main__":
 
     for i in solveMatrix(MAT):
         print(i)
+
+def testSolveMatrixSpeed(number):
+    row0 = np.array([0, 0, 1, 0, 1, 1, 0])
+    row1 = np.array([1, 0, 0, 1, 0, 0, 1])
+    row2 = np.array([0, 1, 1, 0, 0, 1, 0])
+    row3 = np.array([1, 0, 0, 1, 0, 0, 0])
+    row4 = np.array([0, 1, 0, 0, 0, 0, 1])
+    row5 = np.array([0, 0, 0, 1, 1, 0, 1])
+    MAT = np.array([row0, row1, row2, row3, row4, row5])
+    MAT = addLabel(MAT)
+
+    for i in range(number):
+        for j in solveMatrix(MAT):
+            print(j)
+
+if __name__ == "__main__":
+    pass
+
+
+A = np.genfromtxt("matrix.csv", delimiter=",")
+print(A[0,0:20])
+A = A[1::,1::]
+print(A.shape)
+print(type(A))
+print(A[0,0:20])
+
+for i in solveMatrix(A):
+    print(i)
+    break
