@@ -37,12 +37,15 @@ def deleteColByLabel(A, label):
         IndexError -- The label is not found.
     '''
     row, col = A.shape
-    for colIdx in range(len(A[-1,:])):
-        if A[-1,colIdx] == label:
-            return np.delete(A, (colIdx), axis=1)
-    print("___Label{} is not found in matrix\n{}___".format(label, A))
-    raise IndexError
-
+    try:
+        for colIdx in range(len(A[-1,:])):
+            if A[-1,colIdx] == label:
+                return np.delete(A, (colIdx), axis=1)
+        print("___Label {} is not found in matrix\n{}___".format(label, A))
+        raise IndexError
+    except IndexError:
+        print("IndexError. Index {}, matrix: {}".format(A,A))
+        return
 def getColIndexFromLabel(A, label):
     '''
     Find the index of the column with specific label in the matrix index system.
@@ -58,7 +61,7 @@ def getColIndexFromLabel(A, label):
     for i in range(len(A[-1,:])):
         if A[-1,i] == label:
             return i
-    print("___Label{} is not found in matrix\n{}___".format(label, A))
+    print("___Label {} is not found in matrix\n{}___".format(label, A))
     raise IndexError
 
 def solveMatrix(A):
@@ -75,14 +78,13 @@ def solveMatrix(A):
         # Start from the column c with the fewest "1"s.
         temp = A[0:-1, 0:-1]
         c = temp.sum(axis=0).argmin() # This is the index of the column.
-
         # Try each row that has "1".
         for r in range(len(A[:,c])):
-            ansIndex = A[r,-1]
+
             # Skip row that is not "1".
             if A[r,c] != 1:
                 continue
-
+            ansIndex = A[r,-1]
             B = A.copy()
 
             # Now iterate over row r and get col index that is "1".
@@ -92,7 +94,7 @@ def solveMatrix(A):
                     # convert j (index in A) to label to (index in B)
                     label = A[-1,j]
                     idx = getColIndexFromLabel(B, label)
-                    B = B[B[:,idx] != 1]
+                    B = B[B[:,idx] != 1] # Use a mask to modify the matrix rows.
 
                     # Delete the column
                     B = deleteColByLabel(B, A[-1,j])
@@ -137,13 +139,13 @@ def testSolveMatrix():
     Besed on referenced code.
     '''
     # Given a 2D numpy array of 1 and 0, get its exact cover rows
-    row0 = np.array([0, 0, 1, 1, 0, 0])
-    row1 = np.array([1, 1, 0, 0, 0, 0])
-    row2 = np.array([0, 1, 0, 1, 0, 0])
-    row3 = np.array([0, 0, 1, 0, 0, 1])
-    row4 = np.array([1, 0, 0, 0, 0, 0])
-    row5 = np.array([0, 0, 0, 1, 1, 0])
-    MAT = np.array([row0, row1, row2, row3, row4, row5])
+    # row0 = np.array([0, 0, 1, 1, 0, 0])
+    # row1 = np.array([1, 1, 0, 0, 0, 0])
+    # row2 = np.array([0, 1, 0, 1, 0, 0])
+    # row3 = np.array([0, 0, 1, 0, 0, 1])
+    # row4 = np.array([1, 0, 0, 0, 0, 0])
+    # row5 = np.array([0, 0, 0, 1, 1, 0])
+    # MAT = np.array([row0, row1, row2, row3, row4, row5])
 
     # row0 = np.array([0, 0, 1, 0, 1, 1, 0])
     # row1 = np.array([1, 0, 0, 1, 0, 0, 1])
@@ -152,6 +154,24 @@ def testSolveMatrix():
     # row4 = np.array([0, 1, 0, 0, 0, 0, 1])
     # row5 = np.array([0, 0, 0, 1, 1, 0, 1])
     # MAT = np.array([row0, row1, row2, row3, row4, row5])
+
+    # row0 = np.array([1, 0, 0, 1, 0, 0, 1])
+    # row1 = np.array([1, 0, 0, 1, 0, 0, 0])
+    # row2 = np.array([0, 0, 0, 1, 1, 0, 1])
+    # row3 = np.array([0, 0, 1, 0, 1, 1, 0])
+    # row4 = np.array([0, 1, 1, 0, 0, 1, 1])
+    # row5 = np.array([0, 1, 0, 0, 0, 0, 1])
+    # MAT = np.array([row0, row1, row2, row3, row4, row5]) # Ans = [-1, -3, -5]
+
+    row0 = np.array([1, 1, 0, 0, 0, 0])
+    row1 = np.array([0, 0, 0, 0, 1, 1])
+    row2 = np.array([0, 0, 0, 1, 1, 0])
+    row3 = np.array([1, 1, 1, 0, 0, 0])
+    row4 = np.array([0, 0, 1, 1, 0, 0])
+    row5 = np.array([0, 0, 0, 1, 1, 0])
+    row6 = np.array([1, 0, 1, 0, 1, 1])
+    MAT = np.array([row0, row1, row2, row3, row4, row5, row6]) # Ans = [-0, -1, -4]
+
 
     MAT = addLabel(MAT)
 
@@ -166,6 +186,16 @@ def testSolveMatrixSpeed(number):
     row4 = np.array([0, 1, 0, 0, 0, 0, 1])
     row5 = np.array([0, 0, 0, 1, 1, 0, 1])
     MAT = np.array([row0, row1, row2, row3, row4, row5])
+
+    row0 = np.array([1, 0, 0, 1, 0, 0, 1])
+    row1 = np.array([1, 0, 0, 1, 0, 0, 0])
+    row2 = np.array([0, 0, 0, 1, 1, 0, 1])
+    row3 = np.array([0, 0, 1, 0, 1, 1, 0])
+    row4 = np.array([0, 1, 1, 0, 0, 1, 1])
+    row5 = np.array([0, 1, 0, 0, 0, 0, 1])
+    row6 = np.array([1, 0, 0, 1, 0, 0, 0])
+    MAT = np.array([row0, row1, row2, row3, row4, row5, row6]) # Ans = [6, 4, 2] [6, 4, 7]
+
     MAT = addLabel(MAT)
 
     for i in range(number):
@@ -175,14 +205,21 @@ def testSolveMatrixSpeed(number):
 if __name__ == "__main__":
     pass
 
+testSolveMatrixSpeed(1)
 
-A = np.genfromtxt("matrix.csv", delimiter=",")
-print(A[0,0:20])
-A = A[1::,1::]
-print(A.shape)
-print(type(A))
-print(A[0,0:20])
+# A = np.genfromtxt("matrix.csv", delimiter=",")
+# # print(A[0,0:20])
+# A = A[1::,1::]
+# # print(A.shape)
+# # print(type(A))
+# # print(A[0,0:20])
+# np.random.seed(10)
+# np.random.shuffle(A)
+# A = A[:,0:60] # Cannot get over 62, 61x72 is 0.25s....
 
-for i in solveMatrix(A):
-    print(i)
-    break
+# import time
+# t0 = time.time()
+# for i in solveMatrix(A):
+#     print(i)
+#     break
+# print("Total running time is {} s".format((time.time() - t0) / 1))
