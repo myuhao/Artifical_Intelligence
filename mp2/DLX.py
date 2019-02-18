@@ -272,4 +272,7 @@ def test():
     # print(solution.solution)
 
 if __name__ == "__main__":
+    import time
+    t0 = time.time()
     test()
+    print("Running time is {0:.3f}s.".format((time.time()-t0)/60))
