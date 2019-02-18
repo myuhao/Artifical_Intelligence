@@ -150,7 +150,27 @@ class DLX:
             currRow = currRow.d
 
     def _uncover(self, nNode):
-        pass
+        colHeader = nNode.column
+        # Move up the linked list and "reconnect" the nodes.
+        # Initialize to the first UP node.
+        currRow = colHeader.u
+        # We will move up.
+        while currRow != nNode.column:
+            # We will move left.
+            currCol = currRow.l
+            while currCol != currRow:
+                # Reconnect.
+                currCol.u.d = currCol
+                currCol.d.u = currCol
+                # Increment the nodeCt
+                currCol.column.nodeCt += 1
+            # Move the current node in the opposite direction.
+                currCol = currCol.l
+            currRow = currRow.u
+
+        # Reconnect the column headers.
+        colHeader.l.r = colHeader
+        colHeader.r.l = colHeader
 
     def print(self):
         currNode = self.header.r
@@ -197,11 +217,15 @@ def test():
     MAT = np.array([rowHeader, row0, row1, row2, row3, row4, row5]) # Ans = [6, 4, 2] [6, 4, 7] (1-indexed)
 
 
+    # A = np.genfromtxt("matrix.csv", delimiter=",")
+    # A = A[1::,1::]
+    # A = np.insert(A, 0, np.ones((A.shape[1],)), axis=0)
+
+
     solution = DLX(MAT)
     solution._cover(solution.header.r.d)
-    # print(solution.convertToMatrix())
-    solution.print()
-
+    print(solution.shape)
+    # solution.print()
 
 if __name__ == "__main__":
     test()
