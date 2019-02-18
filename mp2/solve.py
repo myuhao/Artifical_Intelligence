@@ -207,19 +207,19 @@ if __name__ == "__main__":
 
 testSolveMatrixSpeed(1)
 
-# A = np.genfromtxt("matrix.csv", delimiter=",")
-# # print(A[0,0:20])
-# A = A[1::,1::]
-# # print(A.shape)
-# # print(type(A))
-# # print(A[0,0:20])
-# np.random.seed(10)
-# np.random.shuffle(A)
-# A = A[:,0:60] # Cannot get over 62, 61x72 is 0.25s....
+A = np.genfromtxt("matrix.csv", delimiter=",")
+# print(A[0,0:20])
+A = A[1::,1::]
+# print(A.shape)
+# print(type(A))
+# print(A[0,0:20])
+np.random.seed(10)
+np.random.shuffle(A)
+A = A[:,0:60] # Cannot get over 62, 61x72 is 0.25s....
 
-# import time
-# t0 = time.time()
-# for i in solveMatrix(A):
-#     print(i)
-#     break
-# print("Total running time is {} s".format((time.time() - t0) / 1))
+import time
+t0 = time.time()
+for i in solveMatrix(A):
+    print(i)
+    break
+print("Total running time is {} s".format((time.time() - t0) / 1))
