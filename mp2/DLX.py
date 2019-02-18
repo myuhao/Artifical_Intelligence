@@ -18,12 +18,15 @@ class DLX:
         def print(self):
             print("Node rowID and colID is ({}, {}).".format(self.rowID, self.colID))
 
+    # ------------ End of Clss Node -------------
+
     def __init__(self, A):
         '''
         Ctor. A is the input np matrix. The first row is pedded with np.ones((nCol,))
         '''
         self.header = self._convertMatToHeader(A)
         self.shape = A.shape
+        self.solution = []
 
     def _convertMatToHeader(self, A):
         """
@@ -148,6 +151,7 @@ class DLX:
             # Increament the currNode.
                 currCol = currCol.r
             currRow = currRow.d
+        return
 
     def _uncover(self, nNode):
         colHeader = nNode.column
@@ -171,14 +175,52 @@ class DLX:
         # Reconnect the column headers.
         colHeader.l.r = colHeader
         colHeader.r.l = colHeader
+        return
+
+    def solve(self):
+        # Base case: we covered all col.
+        if self.header.r == self.header:
+            print("Solution is {}".format(self.solution))
+            return
+
+        # Choose the column to cover.
+        minCol = self._getMinColHeaderNode()
+        # Cover it.
+        self._cover(minCol)
+
+        # Move down the column and add the row index to the solution.
+        currRow = minCol.d
+        while currRow != minCol:
+            # print(currRow.rowID)
+            self.solution.append(currRow.rowID)
+            # Handle the other "1"s by moving right.
+            currCol = currRow.r
+            while currCol != currRow:
+                self._cover(currCol)
+                # Move right, inner loop.
+                currCol = currCol.r
+
+            # Recursively solve the current DLX mesh again.
+            self.solve()
+            # Trackback step.
+            self.solution.pop()
+
+            minCol = currRow.column
+            currCol = currRow.l
+            while currCol != currRow:
+                self._uncover(currCol)
+                currCol = currCol.l
+
+            # Move down, outer loop.
+            currRow = currRow.d
+        self._uncover(minCol)
+
 
     def print(self):
         currNode = self.header.r
         while currNode != self.header:
             currNode.print()
             print(currNode.nodeCt)
-            currNode.d.print()
-            print()
             currNode = currNode.r
 
     def convertToMatrix(self):
@@ -193,39 +235,41 @@ class DLX:
                 currNode = currNode.d
             currColHeader = currColHeader.r
         return mat
+# ----------- End of class DLX ------------
 
 def test():
-    rowHeader = np.ones((7,))
-    # rowHeader =   [1, 1, 1, 1, 1, 1, 1]
-    row0 = np.array([1, 0, 0, 1, 0, 0, 1])
-    row1 = np.array([1, 0, 0, 1, 0, 0, 0])
-    row2 = np.array([0, 0, 0, 1, 1, 0, 1])
-    row3 = np.array([0, 0, 1, 0, 1, 1, 0])
-    row4 = np.array([0, 1, 1, 0, 0, 1, 1])
-    row5 = np.array([0, 1, 0, 0, 0, 0, 1])
-    row6 = np.array([1, 0, 0, 1, 0, 0, 0])
-    MAT = np.array([rowHeader, row0, row1, row2, row3, row4, row5, row6]) # Ans = [6, 4, 2] [6, 4, 7] (1-indexed)
+    # rowHeader = np.ones((7,))
+    # # rowHeader =   [1, 1, 1, 1, 1, 1, 1]
+    # row0 = np.array([1, 0, 0, 1, 0, 0, 1])
+    # row1 = np.array([1, 0, 0, 1, 0, 0, 0])
+    # row2 = np.array([0, 0, 0, 1, 1, 0, 1])
+    # row3 = np.array([0, 0, 1, 0, 1, 1, 0])
+    # row4 = np.array([0, 1, 1, 0, 0, 1, 1])
+    # row5 = np.array([0, 1, 0, 0, 0, 0, 1])
+    # row6 = np.array([1, 0, 0, 1, 0, 0, 0])
+    # MAT = np.array([rowHeader, row0, row1, row2, row3, row4, row5, row6]) # Ans = [6, 4, 2] [6, 4, 7] (1-indexed)
 
-    rowHeader = np.ones((7,))
-    # rowHeader =   [1, 1, 1, 1, 1, 1, 1]
-    row0 = np.array([0, 0, 1, 0, 1, 1, 0])
-    row1 = np.array([1, 0, 0, 1, 0, 0, 1])
-    row2 = np.array([0, 1, 1, 0, 0, 1, 0])
-    row3 = np.array([1, 0, 0, 1, 0, 0, 0])
-    row4 = np.array([0, 1, 0, 0, 0, 0, 1])
-    row5 = np.array([0, 0, 0, 1, 1, 0, 1])
-    MAT = np.array([rowHeader, row0, row1, row2, row3, row4, row5]) # Ans = [6, 4, 2] [6, 4, 7] (1-indexed)
-
-
-    # A = np.genfromtxt("matrix.csv", delimiter=",")
-    # A = A[1::,1::]
-    # A = np.insert(A, 0, np.ones((A.shape[1],)), axis=0)
+    # rowHeader = np.ones((7,))
+    # # rowHeader =   [1, 1, 1, 1, 1, 1, 1]
+    # row0 = np.array([0, 0, 1, 0, 1, 1, 0])
+    # row1 = np.array([1, 0, 0, 1, 0, 0, 1])
+    # row2 = np.array([0, 1, 1, 0, 0, 1, 0])
+    # row3 = np.array([1, 0, 0, 1, 0, 0, 0])
+    # row4 = np.array([0, 1, 0, 0, 0, 0, 1])
+    # row5 = np.array([0, 0, 0, 1, 1, 0, 1])
+    # MAT = np.array([rowHeader, row0, row1, row2, row3, row4, row5]) # Ans = [6, 4, 2] [6, 4, 7] (1-indexed)
 
 
-    solution = DLX(MAT)
-    solution._cover(solution.header.r.d)
-    print(solution.shape)
-    # solution.print()
+    A = np.genfromtxt("matrix.csv", delimiter=",")
+    A = A[1::,1::]
+    A = np.insert(A, 0, np.ones((A.shape[1],)), axis=0)
+
+
+    solution = DLX(A)
+    # solution._cover(solution.header.r.d)
+    # print(solution.shape)
+    solution.solve()
+    # print(solution.solution)
 
 if __name__ == "__main__":
     test()
