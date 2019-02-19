@@ -277,44 +277,44 @@ class CONST:
     # List of petnominos.
     petnominos = [np.array([[0,1,1],
                        [1,1,0],
-                       [0,1,0]]),
+                       [0,1,0]]), #F
             np.array([[2],
                       [2],
                       [2],
                       [2],
-                      [2]]),
+                      [2]]), #I
             np.array([[3,0],
                       [3,0],
                       [3,0],
-                      [3,3]]),
+                      [3,3]]), #L
             np.array([[0,4],
                       [0,4],
                       [4,4],
-                      [4,0]]),
+                      [4,0]]), #N
             np.array([[5,5],
                       [5,5],
-                      [5,0]]),
+                      [5,0]]), #P
             np.array([[6,6,6],
                       [0,6,0],
-                      [0,6,0]]),
+                      [0,6,0]]), #T
             np.array([[7,0,7],
-                      [7,7,7]]),
+                      [7,7,7]]), #U
             np.array([[8,0,0],
                       [8,0,0],
-                      [8,8,8]]),
+                      [8,8,8]]), #V
             np.array([[9,0,0],
                       [9,9,0],
-                      [0,9,9]]),
+                      [0,9,9]]), #W
             np.array([[0,10,0],
                       [10,10,10],
-                      [0,10,0]]),
+                      [0,10,0]]), #X
             np.array([[0,11],
                       [11,11],
                       [0,11],
-                      [0,11]]),
+                      [0,11]]), #Y
             np.array([[12,12,0],
                       [0,12,0],
-                      [0,12,12]])]
+                      [0,12,12]])] #Z
 
     board_6x10 = np.ones((6,10))
     board_5x12 = np.ones((5,12))
@@ -351,7 +351,7 @@ class Converter:
 
         def isInOren(p):
             for i in allOrentation:
-                if np.all(i == p):
+                if np.all(i == p) and i.shape == p.shape: # "I" shaped pent needs special considerations.
                     return True
             return False
 
@@ -366,7 +366,6 @@ class Converter:
                 flipped = np.flip(pent, flipAxis)
             for rotTimes in range(4):
                 newPent = np.rot90(flipped, k=rotTimes)
-                # print(newPent)
                 if not isInOren(newPent):
                     allOrentation.append(newPent)
         return allOrentation
@@ -380,8 +379,45 @@ class Converter:
     def print(self):
         print(self.matrix)
 
-if __name__ == "__main__":
-    A = Converter(CONST.board_6x10, CONST.petnominos)
-    for i in A._getAllOrentation(CONST.petnominos[2]):
-        print(i)
 
+def testNumOrentation():
+    ANS = {
+        "F": 8,
+        "L": 8,
+        "N": 8,
+        "P": 8,
+        "Y": 8,
+        "T": 4,
+        "U": 4,
+        "V": 4,
+        "W": 4,
+        "Z": 4,
+        "I": 2,
+        "X": 1
+    }
+
+    letters = [
+        "F",
+        "I",
+        "L",
+        "N",
+        "P",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z"
+    ]
+
+    index2ANS = {}
+    for i in range(12):
+        index2ANS[i] = ANS[letters[i]]
+
+    A = Converter(CONST.board_6x10, CONST.petnominos)
+    for i in range(len(CONST.petnominos)):
+        print(len(A._getAllOrentation(CONST.petnominos[i])) == index2ANS[i])
+
+if __name__ == "__main__":
+    testNumOrentation()
