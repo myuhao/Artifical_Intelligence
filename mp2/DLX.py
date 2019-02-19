@@ -436,7 +436,16 @@ class Converter:
         # return resultList
 
     def getMatrix(self):
-
+        pent_idx = 0
+        for pi in self.pents:
+            for row in self._getAllPosition(pi):
+                newRow = row.copy()
+                IDRow = np.zeros((1, len(self.pents)))
+                IDRow[0,pent_idx] = 1
+                newRow = np.append(IDRow, newRow)
+                newRow = newRow.reshape((1, self.nCol))
+                self.matrix = np.append(self.matrix, newRow, axis=0)
+            pent_idx += 1
         return self.matrix
 
     def print(self):
@@ -486,7 +495,6 @@ def testNumOrentation():
     for i in range(len(CONST.petnominos)):
         print(len(A._getAllOrentation(CONST.petnominos[i])) == index2ANS[i])
 
-
 def testAllPositions():
     A = Converter(CONST.empty_chessboard, CONST.petnominos)
     for i in A._getAllPosition(CONST.petnominos[3]):
@@ -496,5 +504,16 @@ def testAllPositions():
                 print(i)
     for i in A.npRow2Pent:
         print(A.npRow2Pent[i])
+
+def testFinalMatrix():
+    A = Converter(CONST.board_6x10, CONST.petnominos)
+    print(A.getMatrix().shape)
+
+def testAll():
+    A = Converter(CONST.board_6x10, CONST.petnominos)
+    mat = A.getMatrix()
+    DLL = DLX(mat)
+    DLL.solve()
+
 if __name__ == "__main__":
-    testAllPositions()
+    testAll()
