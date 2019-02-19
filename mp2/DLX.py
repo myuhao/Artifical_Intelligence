@@ -334,6 +334,7 @@ class Converter:
         self.nCol += len(pents)
         self.matrix = np.ones((1, self.nCol))
         self.nRow = 1
+        self.rIdx2Pent = {} # Row index of the matrix -> pent.
 
     # 0-based np.matrix index <-> int.
     def _twoD2oneD(self, ridx, cidx):
@@ -374,13 +375,69 @@ class Converter:
         pass
 
     def _getAllPosition(self, pent):
-        pass
+        """
+        Pass in a pent as np.array and return a list of np.array to be
+        inserted in to the final matrix.
+        Arguments:
+            pent np.array -- A pentominoe to be placed to the borad.
+        Yield:
+            A list of np.array of shape (1,nCol) that needs to be inserted
+            to the matrix.
+        """
+        # If rectanglar, holes will not be a problem.
+        holes = [] # List of tuples of the "0"s in the board.
+        holeIdx = []
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                if self.board[i,j] == 0:
+                    holes.append((i,j))
+                    holeIdx.append(self.board.shape[0]*i+j)
+        '''
+        First add the value of the pent to the board if possible.
+        Then check if "0"/holes changed value.
+        Then flattened the array with np.flatten().
+        Then delete the holes with np.delete().
+        Then add the pent index to the front.
+        '''
+        resultList = []
+        # Iterate over every possible orentations
+        for pi in self._getAllOrentation(pent):
+            prow, pcol = pi.shape
+            # Add the board value to the current board first.
+            for i in range(self.board.shape[0] - prow):
+                for j in range(self.board.shape[1] - pcol):
+                    isInTheHole = False # bool to check if the
+                                        # pent intersect the hole
+                    copy_board = self.board.copy()
+                    copy_board[i:i+prow, j:j+pcol] += pi
+                    # Check for holes.
+                    if len(holes) != 0:
+                        for h in holes:
+                            if copy_board[h[0], h[1]] != 0:
+                                # This means something is added to the hole.
+                                # So we do not add this position.
+                                isInTheHole = True
+                    if isInTheHole == False:
+                        flattened = copy_board.flatten()
+                        flattened = np.delete(flattened, holeIdx)
+                        # Renormalized to 1.
+                        flattened -= 1
+                        flattened /= flattened[np.nonzero(flattened)][0]
+
+                        yield flattened
+                        resultList.append(flattened)
+        # return resultList
+
 
     def print(self):
         print(self.matrix)
 
 
 def testNumOrentation():
+    """
+    Test the number of orentations by checking with the reference answers
+    <http://www.basic.northwestern.edu/g-buehler/pentominoes/speech.htm>
+    """
     ANS = {
         "F": 8,
         "L": 8,
@@ -419,5 +476,14 @@ def testNumOrentation():
     for i in range(len(CONST.petnominos)):
         print(len(A._getAllOrentation(CONST.petnominos[i])) == index2ANS[i])
 
+
+def testAllPositions():
+    A = Converter(CONST.empty_chessboard, CONST.petnominos)
+    for i in A._getAllPosition(CONST.petnominos[3]):
+        # print(i)
+        if i != None:
+            if np.sum(i) != 5:
+                print(i)
+
 if __name__ == "__main__":
-    testNumOrentation()
+    testAllPositions()
