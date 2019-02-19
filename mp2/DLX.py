@@ -335,6 +335,7 @@ class Converter:
         self.matrix = np.ones((1, self.nCol))
         self.nRow = 1
         self.rIdx2Pent = {} # Row index of the matrix -> pent.
+        self.npRow2Pent = {} # Use np.row -> pent. First 60 columns.
 
     # 0-based np.matrix index <-> int.
     def _twoD2oneD(self, ridx, cidx):
@@ -422,12 +423,21 @@ class Converter:
                         flattened = np.delete(flattened, holeIdx)
                         # Renormalized to 1.
                         flattened -= 1
-                        flattened /= flattened[np.nonzero(flattened)][0]
-
+                        pentValue = flattened[np.nonzero(flattened)][0]
+                        flattened /= pentValue
+                        # Handle collision.
+                        if flattened.tostring() in self.npRow2Pent.keys():
+                            print("-----Key already exists-----")
+                            raise KeyError
+                        # Hashing using np.tostring().
+                        self.npRow2Pent[flattened.tostring()] = int(pentValue)
                         yield flattened
                         resultList.append(flattened)
         # return resultList
 
+    def getMatrix(self):
+
+        return self.matrix
 
     def print(self):
         print(self.matrix)
@@ -484,6 +494,7 @@ def testAllPositions():
         if i != None:
             if np.sum(i) != 5:
                 print(i)
-
+    for i in A.npRow2Pent:
+        print(A.npRow2Pent[i])
 if __name__ == "__main__":
     testAllPositions()
