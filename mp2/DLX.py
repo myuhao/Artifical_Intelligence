@@ -27,6 +27,7 @@ class DLX:
         self.header = self._convertMatToHeader(A)
         self.shape = A.shape
         self.solution = []
+        self.SOL = []
 
     def _convertMatToHeader(self, A):
         """
@@ -181,6 +182,8 @@ class DLX:
         # Base case: we covered all col.
         if self.header.r == self.header:
             print("Solution is {}".format(self.solution))
+            self.SOL.append(self.solution.copy())
+            # yield self.solution.copy() # NOT working!!!
             return
 
         # Choose the column to cover.
@@ -238,16 +241,16 @@ class DLX:
 # ----------- End of class DLX ------------
 
 def test():
-    # rowHeader = np.ones((7,))
-    # # rowHeader =   [1, 1, 1, 1, 1, 1, 1]
-    # row0 = np.array([1, 0, 0, 1, 0, 0, 1])
-    # row1 = np.array([1, 0, 0, 1, 0, 0, 0])
-    # row2 = np.array([0, 0, 0, 1, 1, 0, 1])
-    # row3 = np.array([0, 0, 1, 0, 1, 1, 0])
-    # row4 = np.array([0, 1, 1, 0, 0, 1, 1])
-    # row5 = np.array([0, 1, 0, 0, 0, 0, 1])
-    # row6 = np.array([1, 0, 0, 1, 0, 0, 0])
-    # MAT = np.array([rowHeader, row0, row1, row2, row3, row4, row5, row6]) # Ans = [6, 4, 2] [6, 4, 7] (1-indexed)
+    rowHeader = np.ones((7,))
+    # rowHeader =   [1, 1, 1, 1, 1, 1, 1]
+    row0 = np.array([1, 0, 0, 1, 0, 0, 1])
+    row1 = np.array([1, 0, 0, 1, 0, 0, 0])
+    row2 = np.array([0, 0, 0, 1, 1, 0, 1])
+    row3 = np.array([0, 0, 1, 0, 1, 1, 0])
+    row4 = np.array([0, 1, 1, 0, 0, 1, 1])
+    row5 = np.array([0, 1, 0, 0, 0, 0, 1])
+    row6 = np.array([1, 0, 0, 1, 0, 0, 0])
+    MAT = np.array([rowHeader, row0, row1, row2, row3, row4, row5, row6]) # Ans = [6, 4, 2] [6, 4, 7] (1-indexed)
 
     # rowHeader = np.ones((7,))
     # # rowHeader =   [1, 1, 1, 1, 1, 1, 1]
@@ -264,12 +267,16 @@ def test():
     A = A[1::,1::]
     A = np.insert(A, 0, np.ones((A.shape[1],)), axis=0)
 
-
+    A = MAT
     solution = DLX(A)
     # solution._cover(solution.header.r.d)
     # print(solution.shape)
+    ct = 0
     solution.solve()
-    # print(solution.solution)
+    # for i in solution.solve():
+    #     print(i)
+
+    print(solution.SOL)
 
 class CONST:
     dominos = [np.array([[i],[i]]) for i in range(1,31)]
@@ -405,8 +412,8 @@ class Converter:
         for pi in self._getAllOrentation(pent):
             prow, pcol = pi.shape
             # Add the board value to the current board first.
-            for i in range(self.board.shape[0] - prow):
-                for j in range(self.board.shape[1] - pcol):
+            for i in range(self.board.shape[0] + 1 - prow):
+                for j in range(self.board.shape[1] + 1 - pcol):
                     isInTheHole = False # bool to check if the
                                         # pent intersect the hole
                     copy_board = self.board.copy()
@@ -512,8 +519,15 @@ def testFinalMatrix():
 def testAll():
     A = Converter(CONST.board_6x10, CONST.petnominos)
     mat = A.getMatrix()
+    # for i in range(72):
+    #     print(np.max(mat[:,i]) == 1)
+    # for i in range(mat.shape[0]):
+    #     print(np.sum(mat[i,:]) == 6)
     DLL = DLX(mat)
     DLL.solve()
+    for i in DLL.SOL:
+        print(i)
+
 
 if __name__ == "__main__":
     testAll()
