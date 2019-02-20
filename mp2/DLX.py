@@ -14,6 +14,7 @@ class DLX:
             self.rowID = None # Type = int, 0-indexed, padded row number.
             self.colID = None # Type = int, 0-indexed non-padded col number.
             self.nodeCt = 0 # Type = int, Number of nodes in the column.
+            self.val = 0 # Type = int, the value of the matrix element.
 
         def print(self):
             print("Node rowID and colID is ({}, {}).".format(self.rowID, self.colID))
@@ -58,7 +59,8 @@ class DLX:
         # Iterate over the input matrix A to collect all "1".
         for i in range(nRow):
             for j in range(nCol):
-                if A[i][j] == 1:
+                # How about count all matrix element that is larger than 1?
+                if A[i][j] >= 1:
                     # Increment number of node at the column node.
                     if i != 0:
                         matrix[0][j].nodeCt += 1
@@ -67,6 +69,8 @@ class DLX:
                     # Update the node's rowID and colID
                     matrix[i][j].rowID = i
                     matrix[i][j].colID = j
+                    # Update the node's value
+                    matrix[i][j].val = A[i][j]
 
                     # Get the next 1 and have current node point to it.
                     # --------------------------------------------------
@@ -331,7 +335,8 @@ class CONST:
 
 class Converter:
     def __init__(self, board, pents):
-        self.board = board
+        self.HOLEVAL = 2019 # Randomly choosen to represent hole.
+        self.board = self._fillAllHoles(board, self.HOLEVAL)
         self.pents = pents
         self.nCol = 0 # Number of columns.
         for i in self.board:
@@ -342,7 +347,12 @@ class Converter:
         self.matrix = np.ones((1, self.nCol))
         self.nRow = 1
         self.rIdx2Pent = {} # Row index of the matrix -> pent.
-        self.npRow2Pent = {} # Use np.row -> pent. First 60 columns.
+        '''
+        Use np.row -> pent.
+        Key: tostring(row[0:60]), first 60 columns.
+        Val: (pi, (rowi, coli))
+        '''
+        self.npRow2Pent = {}
 
     # 0-based np.matrix index <-> int.
     def _twoD2oneD(self, ridx, cidx):
@@ -382,6 +392,14 @@ class Converter:
     def _isValidPosition(self, pent, ridx, cidx):
         pass
 
+    def _fillAllHoles(self, board, fillVal):
+        copy_board = board.copy()
+        for i in range(len(copy_board)):
+            for j in range(len(copy_board[i])):
+                if copy_board[i][j] == 0:
+                    copy_board[i][j] = fillVal
+        return copy_board
+
     def _getAllPosition(self, pent):
         """
         Pass in a pent as np.array and return a list of np.array to be
@@ -397,7 +415,7 @@ class Converter:
         holeIdx = []
         for i in range(len(self.board)):
             for j in range(len(self.board[i])):
-                if self.board[i,j] == 0:
+                if self.board[i,j] == self.HOLEVAL:
                     holes.append((i,j))
                     holeIdx.append(self.board.shape[0]*i+j)
         '''
@@ -421,7 +439,7 @@ class Converter:
                     # Check for holes.
                     if len(holes) != 0:
                         for h in holes:
-                            if copy_board[h[0], h[1]] != 0:
+                            if copy_board[h[0], h[1]] != self.HOLEVAL:
                                 # This means something is added to the hole.
                                 # So we do not add this position.
                                 isInTheHole = True
@@ -437,7 +455,9 @@ class Converter:
                             print("-----Key already exists-----")
                             raise KeyError
                         # Hashing using np.tostring().
-                        self.npRow2Pent[flattened.tostring()] = int(pentValue)
+                        # Generate tuple of (pi, (rowi,coli))
+                        tileANS = (pi.copy(), (i,j))
+                        self.npRow2Pent[flattened.tostring()] = tileANS
                         yield flattened
                         resultList.append(flattened)
         # return resultList
@@ -455,8 +475,18 @@ class Converter:
             pent_idx += 1
         return self.matrix
 
+    def getPent(self, ridx):
+        row = self.matrix[ridx, len(self.pents)::]
+        key = row.tostring()
+        return self.npRow2Pent[key]
+
     def print(self):
         print(self.matrix)
+
+    def printDict(self):
+        for k in self.npRow2Pent:
+            print(k)
+            break
 
 
 def testNumOrentation():
@@ -565,6 +595,19 @@ def testAll():
     # for i in range(mat.shape[0]):
     #     print(np.sum(mat[i,:]) == 6)
 
+def testGetAns():
+    A = Converter(CONST.board_3x20, CONST.petnominos)
+    mat = A.getMatrix()
+    DLL = DLX(mat)
+    DLL.solve()
+    A.printDict()
+
+    for i in DLL.SOL:
+        for ridx in i:
+            print(A.getPent(int(ridx)))
+        break
+    print("Number of solutions is {}".format(len(DLL.SOL)))
+
 if __name__ == "__main__":
-    testHoles()
+    testGetAns()
 
