@@ -130,14 +130,14 @@ for i, P in enumerate(pentominoes):
 A = pd.DataFrame(rows)
 A.to_csv('matrix.csv')
 
-import time
-t0 = time.time()
+# import time
+# t0 = time.time()
 
-for i in exact_cover(A):
-    print(i)
-    # break
+# for i in exact_cover(A):
+#     print(i)
+#     # break
 
-print("Running time is {0:.3f}s.".format((time.time()-t0)/60))
+# print("Running time is {0:.3f}s.".format((time.time()-t0)/60))
 
 # covers = np.array(list(exact_cover(A)), dtype='int')
 # np.savetxt('exact-covers.csv', covers, delimiter=',', fmt='%d')

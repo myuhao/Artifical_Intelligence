@@ -487,6 +487,7 @@ class Converter:
         for k in self.npRow2Pent:
             print(k)
             break
+# -------- End of class Converter ---------
 
 
 def testNumOrentation():

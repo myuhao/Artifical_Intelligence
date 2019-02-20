@@ -1,119 +1,404 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import sys # Use sys.maxsize
 
-def addLabel(A):
-    """
-    Add label in to a numpy array.
+class DLX:
 
-    Arguments:
-        A {ndarray} -- The original matrix
-    Returns:
-        ndarray -- Labeled matrix. Index is at the last row and col.
-    """
-    row, col = A.shape
-    row += 1
-    col += 1
+    class Node:
+        def __init__(self, left=None, right=None, up=None, down=None):
+            self.l = left # Type = Node, left node.
+            self.r = right
+            self.u = up
+            self.d = down
+            self.column = None # Point to the column header node that identify the node's column label
+            self.rowID = None # Type = int, 0-indexed, padded row number.
+            self.colID = None # Type = int, 0-indexed non-padded col number.
+            self.nodeCt = 0 # Type = int, Number of nodes in the column.
+            self.val = 0 # Type = int, the value of the matrix element.
 
-    newMat = np.ones((row, col))
-    newMat *= -1
+        def print(self):
+            print("Node rowID and colID is ({}, {}).".format(self.rowID, self.colID))
 
-    newMat[0:row-1, 0:col-1] = A.copy()
-    newMat[row-1,:] *= np.arange(0, col)
-    newMat[:,col-1] *= np.arange(0, row)
-    newMat[-1, -1] = 2
-    return newMat
+    # ------------ End of Clss Node -------------
 
-def deleteColByLabel(A, label):
-    '''
-    Delete the the column in A with specified label.
-    The original matrix is not modified.
+    def __init__(self, A):
+        '''
+        Ctor. A is the input np matrix. The first row is pedded with np.ones((nCol,))
+        '''
+        self.header = self._convertMatToHeader(A)
+        self.shape = A.shape
+        self.solution = []
+        self.SOL = []
 
-    Arguments:
-        A {np.ndarray} -- matrix to be deleted.
-        label {int} -- The label used in the matrix.
-    Returns:
-        [np.ndarray] -- A copy of the modified matrix.
-    Raises:
-        IndexError -- The label is not found.
-    '''
-    row, col = A.shape
-    try:
-        for colIdx in range(len(A[-1,:])):
-            if A[-1,colIdx] == label:
-                return np.delete(A, (colIdx), axis=1)
-        print("___Label {} is not found in matrix\n{}___".format(label, A))
-        raise IndexError
-    except IndexError:
-        print("IndexError. Index {}, matrix: {}".format(A,A))
+    def _convertMatToHeader(self, A):
+        """
+        Convert the np matrix to a DLX strcuture.
+        Return the header Node.
+        """
+        nRow, nCol = A.shape
+
+        # Four helper functions to help row over the indice.
+        def moveRight(currColIndex):
+            return (currColIndex+1)%nCol
+        def moveLeft(currColIndex):
+            return nCol-1 if currColIndex-1<0 else currColIndex-1
+        def moveDown(currRowIndex):
+            return (currRowIndex+1)%nRow
+        def moveUp(currRowIndex):
+            return nRow-1 if currRowIndex-1<0 else currRowIndex-1
+
+        # Constructing a matrix with nodes.
+        # First row are column nodes, therefore row is 1-indexed.
+        matrix = []
+        for i in range(nRow):
+            tempRow = []
+            for j in range(nCol):
+                tempRow.append(self.Node())
+            matrix.append(tempRow)
+
+        # Iterate over the input matrix A to collect all "1".
+        for i in range(nRow):
+            for j in range(nCol):
+                # How about count all matrix element that is larger than 1?
+                if A[i][j] >= 1:
+                    # Increment number of node at the column node.
+                    if i != 0:
+                        matrix[0][j].nodeCt += 1
+                    # Point the node back to its column header.
+                    matrix[i][j].column = matrix[0][j]
+                    # Update the node's rowID and colID
+                    matrix[i][j].rowID = i
+                    matrix[i][j].colID = j
+                    # Update the node's value
+                    matrix[i][j].val = A[i][j]
+
+                    # Get the next 1 and have current node point to it.
+                    # --------------------------------------------------
+                    # Right neighbor.
+                    currColIndex = j
+                    while True:
+                        currColIndex = moveRight(currColIndex)
+                        if currColIndex == j or A[i][currColIndex] == 1:
+                            break
+                    matrix[i][j].r = matrix[i][currColIndex]
+                    # Left neighbor.
+                    currColIndex = j
+                    while True:
+                        currColIndex = moveLeft(currColIndex)
+                        if currColIndex == j or A[i][currColIndex] == 1:
+                            break
+                    matrix[i][j].l = matrix[i][currColIndex]
+                    # Down neighbor.
+                    currRowIndex = i
+                    while True:
+                        currRowIndex = moveDown(currRowIndex)
+                        if currRowIndex == i or A[currRowIndex][j] == 1:
+                            break
+                    matrix[i][j].d = matrix[currRowIndex][j]
+                    # Up neighbor.
+                    currRowIndex = i
+                    while True:
+                        currRowIndex = moveUp(currRowIndex)
+                        if currRowIndex == i or A[currRowIndex][j] == 1:
+                            break
+                    matrix[i][j].u = matrix[currRowIndex][j]
+                    # --------------------------------------------------
+                    # print("({},{}) is linked to ({}, {})".format(i,j,i,currColIndex))
+        # Connect the header node.
+        header = self.Node()
+        header.nodeCt = sys.maxsize
+        header.r = matrix[0][0]
+        header.l = matrix[0][nCol-1]
+        matrix[0][0].l = header
+        matrix[0][nCol-1].r = header
+        return header
+
+    def _getMinColHeaderNode(self):
+        '''
+        Get the column header of the column with the smallest number
+        of node.
+        If nodeCt is the same, use the column with lower column index.
+        Returns:
+            Node -- The column header that has the lowest nodeCt.
+        Raises:
+            IndexError -- The matrix is empty.
+        '''
+        currNode = self.header.r
+        minNode = currNode
+        if currNode == None:
+            print("ERROR: EMPTY MATRIX.")
+            raise IndexError
+        while currNode != self.header:
+            minNode = minNode if minNode.nodeCt<=currNode.nodeCt else currNode
+            currNode = currNode.r
+        return minNode
+
+    def _cover(self, nNode):
+        # Remove the column header first.
+        colHeader = nNode.column
+        colHeader.r.l = colHeader.l
+        colHeader.l.r = colHeader.r
+
+        # Move down the linked list and remove rows.
+        # Initialized at the first node that is not the column header.
+        currRow = colHeader.d
+        # We will move down this column
+        while currRow != nNode.column:
+            # When encountered a node, we will move right.
+            currCol = currRow.r
+            while currCol != currRow:
+                # When encountered a node, detached it from the column.
+                currCol.d.u = currCol.u
+                currCol.u.d = currCol.d
+                # Decreament the nodeCt.
+                currCol.column.nodeCt -= 1
+
+            # Increament the currNode.
+                currCol = currCol.r
+            currRow = currRow.d
         return
-def getColIndexFromLabel(A, label):
-    '''
-    Find the index of the column with specific label in the matrix index system.
 
-    Arguments:
-        A {np.ndarray} -- matrix to be analyzed.
-        label {int} -- The label used in the matrix.
-    Returns:
-        int -- The index of the column.
-    Raises:
-        IndexError -- The label is not found.
-    '''
-    for i in range(len(A[-1,:])):
-        if A[-1,i] == label:
-            return i
-    print("___Label {} is not found in matrix\n{}___".format(label, A))
-    raise IndexError
+    def _uncover(self, nNode):
+        colHeader = nNode.column
+        # Move up the linked list and "reconnect" the nodes.
+        # Initialize to the first UP node.
+        currRow = colHeader.u
+        # We will move up.
+        while currRow != nNode.column:
+            # We will move left.
+            currCol = currRow.l
+            while currCol != currRow:
+                # Reconnect.
+                currCol.u.d = currCol
+                currCol.d.u = currCol
+                # Increment the nodeCt
+                currCol.column.nodeCt += 1
+            # Move the current node in the opposite direction.
+                currCol = currCol.l
+            currRow = currRow.u
 
-def solveMatrix(A):
-    '''
-    Get the row indices of the exact cover.
-    Arguments:
-        A {np.ndarray} -- Input matrix
-    '''
-    # If there is no column, end.
-    # Take the index column into consideration.
-    if A.shape[1] <= 1:
-        yield []
-    else:
-        # Start from the column c with the fewest "1"s.
-        temp = A[0:-1, 0:-1]
-        c = temp.sum(axis=0).argmin() # This is the index of the column.
-        # Try each row that has "1".
-        for r in range(len(A[:,c])):
+        # Reconnect the column headers.
+        colHeader.l.r = colHeader
+        colHeader.r.l = colHeader
+        return
 
-            # Skip row that is not "1".
-            if A[r,c] != 1:
-                continue
-            ansIndex = A[r,-1]
-            B = A.copy()
+    def solve(self):
+        # Base case: we covered all col.
+        if self.header.r == self.header:
+            print("Solution is {}".format(self.solution))
+            self.SOL.append(self.solution.copy())
+            # yield self.solution.copy() # NOT working!!!
+            return
 
-            # Now iterate over row r and get col index that is "1".
-            for j in range(len(A[r,:])):
-                if A[r,j] == 1: # j now is the col index with "1".
-                    # First delete the rows with ones in this col
-                    # convert j (index in A) to label to (index in B)
-                    label = A[-1,j]
-                    idx = getColIndexFromLabel(B, label)
-                    B = B[B[:,idx] != 1] # Use a mask to modify the matrix rows.
+        # Choose the column to cover.
+        minCol = self._getMinColHeaderNode()
+        # Cover it.
+        self._cover(minCol)
 
-                    # Delete the column
-                    B = deleteColByLabel(B, A[-1,j])
+        # Move down the column and add the row index to the solution.
+        currRow = minCol.d
+        while currRow != minCol:
+            # print(currRow.rowID)
+            self.solution.append(currRow.rowID)
+            # Handle the other "1"s by moving right.
+            currCol = currRow.r
+            while currCol != currRow:
+                self._cover(currCol)
+                # Move right, inner loop.
+                currCol = currCol.r
 
-                # Skip col that is not "1":
-                if A[r,j] != 1:
-                    continue
+            # Recursively solve the current DLX mesh again.
+            self.solve()
+            # Trackback step.
+            self.solution.pop()
 
-            for sol in solveMatrix(B):
-                yield [ansIndex] + sol
+            minCol = currRow.column
+            currCol = currRow.l
+            while currCol != currRow:
+                self._uncover(currCol)
+                currCol = currCol.l
 
-def makeMatrix(board, pents):
-    """
-    Accept the borad matrix and pentomino list and construct the matrix to be solved.
+            # Move down, outer loop.
+            currRow = currRow.d
+        self._uncover(minCol)
 
-    Arguments:
-        board {np-ndarray} -- The borad.
-        pents {list} -- list of np-ndarray represent the possible pentominos.
-    """
+
+    def print(self):
+        currNode = self.header.r
+        while currNode != self.header:
+            currNode.print()
+            print(currNode.nodeCt)
+            currNode = currNode.r
+
+    def convertToMatrix(self):
+        mat = np.zeros(self.shape)
+        mat[0,:] = np.ones((self.shape[1],))
+        currColHeader = self.header.r
+        for i in range(self.shape[1]-1):
+            currNode = currColHeader.d
+            while currNode != currColHeader:
+                currNode.print()
+                mat[currNode.rowID, currNode.colID] = 1
+                currNode = currNode.d
+            currColHeader = currColHeader.r
+        return mat
+# ----------- End of class DLX ------------
+
+class Converter:
+    def __init__(self, board, pents):
+        self.HOLEVAL = 2019 # Randomly choosen to represent hole.
+        self.board = self._fillAllHoles(board, self.HOLEVAL)
+        self.pents = pents
+        self.nCol = 0 # Number of columns.
+        for i in self.board:
+            for j in i:
+                if j == 1:
+                    self.nCol += 1
+        self.nCol += len(pents)
+        self.matrix = np.ones((1, self.nCol))
+        self.nRow = 1
+        self.rIdx2Pent = {} # Row index of the matrix -> pent.
+        '''
+        Use np.row -> pent.
+        Key: tostring(row[0:60]), first 60 columns.
+        Val: (pi, (rowi, coli))
+        '''
+        self.npRow2Pent = {}
+
+    # 0-based np.matrix index <-> int.
+    def _twoD2oneD(self, ridx, cidx):
+        return ridx*self.nCol + cidx
+    def _oneD2twoD(self, idx):
+        return (idx//self.nCol, idx%self.nCol)
+
+    def _getAllOrentation(self, pent):
+        '''
+        Get a list of all possible orentation of a single pentomino
+
+        Returned as a list.
+        '''
+        allOrentation = [pent]
+
+        def isInOren(p):
+            for i in allOrentation:
+                if np.all(i == p) and i.shape == p.shape: # "I" shaped pent needs special considerations.
+                    return True
+            return False
+
+        for flipAxis in range(4):
+            flipped = pent.copy()
+            if flipAxis == 2:
+                flipped = pent.copy()
+            elif flipAxis == 3:
+                flipped = np.flip(pent,0)
+                flipped = np.flip(flipped,1)
+            else:
+                flipped = np.flip(pent, flipAxis)
+            for rotTimes in range(4):
+                newPent = np.rot90(flipped, k=rotTimes)
+                if not isInOren(newPent):
+                    allOrentation.append(newPent)
+        return allOrentation
+
+    def _isValidPosition(self, pent, ridx, cidx):
+        pass
+
+    def _fillAllHoles(self, board, fillVal):
+        copy_board = board.copy()
+        for i in range(len(copy_board)):
+            for j in range(len(copy_board[i])):
+                if copy_board[i][j] == 0:
+                    copy_board[i][j] = fillVal
+        return copy_board
+
+    def _getAllPosition(self, pent):
+        """
+        Pass in a pent as np.array and return a list of np.array to be
+        inserted in to the final matrix.
+        Arguments:
+            pent np.array -- A pentominoe to be placed to the borad.
+        Yield:
+            A list of np.array of shape (1,nCol) that needs to be inserted
+            to the matrix.
+        """
+        # If rectanglar, holes will not be a problem.
+        holes = [] # List of tuples of the "0"s in the board.
+        holeIdx = []
+        for i in range(len(self.board)):
+            for j in range(len(self.board[i])):
+                if self.board[i,j] == self.HOLEVAL:
+                    holes.append((i,j))
+                    holeIdx.append(self.board.shape[0]*i+j)
+        '''
+        First add the value of the pent to the board if possible.
+        Then check if "0"/holes changed value.
+        Then flattened the array with np.flatten().
+        Then delete the holes with np.delete().
+        Then add the pent index to the front.
+        '''
+        resultList = []
+        # Iterate over every possible orentations
+        for pi in self._getAllOrentation(pent):
+            prow, pcol = pi.shape
+            # Add the board value to the current board first.
+            for i in range(self.board.shape[0] + 1 - prow):
+                for j in range(self.board.shape[1] + 1 - pcol):
+                    isInTheHole = False # bool to check if the
+                                        # pent intersect the hole
+                    copy_board = self.board.copy()
+                    copy_board[i:i+prow, j:j+pcol] += pi
+                    # Check for holes.
+                    if len(holes) != 0:
+                        for h in holes:
+                            if copy_board[h[0], h[1]] != self.HOLEVAL:
+                                # This means something is added to the hole.
+                                # So we do not add this position.
+                                isInTheHole = True
+                    if isInTheHole == False:
+                        flattened = copy_board.flatten()
+                        flattened = np.delete(flattened, holeIdx)
+                        # Renormalized to 1.
+                        flattened -= 1
+                        pentValue = flattened[np.nonzero(flattened)][0]
+                        flattened /= pentValue
+                        # Handle collision.
+                        if flattened.tostring() in self.npRow2Pent.keys():
+                            print("-----Key already exists-----")
+                            raise KeyError
+                        # Hashing using np.tostring().
+                        # Generate tuple of (pi, (rowi,coli))
+                        tileANS = (pi.copy(), (i,j))
+                        self.npRow2Pent[flattened.tostring()] = tileANS
+                        yield flattened
+                        resultList.append(flattened)
+        # return resultList
+
+    def getMatrix(self):
+        pent_idx = 0
+        for pi in self.pents:
+            for row in self._getAllPosition(pi):
+                newRow = row.copy()
+                IDRow = np.zeros((1, len(self.pents)))
+                IDRow[0,pent_idx] = 1
+                newRow = np.append(IDRow, newRow)
+                newRow = newRow.reshape((1, self.nCol))
+                self.matrix = np.append(self.matrix, newRow, axis=0)
+            pent_idx += 1
+        return self.matrix
+
+    def getPent(self, ridx):
+        row = self.matrix[ridx, len(self.pents)::]
+        key = row.tostring()
+        return self.npRow2Pent[key]
+
+    def print(self):
+        print(self.matrix)
+
+    def printDict(self):
+        for k in self.npRow2Pent:
+            print(k)
+            break
+# -------- End of class Converter ---------
 
 def solve(board, pents):
     """
@@ -129,97 +414,14 @@ def solve(board, pents):
     -You can assume there will always be a solution.
     """
 
-    raise NotImplementedError
+    solution = []
+    cvt = Converter(board, pents)
+    matrix = cvt.getMatrix()
+    solver = DLX(matrix)
+    solver.solve()
+    for ans in solver.SOL:
+        for ridx in ans:
+            solution.append(cvt.getPent(ridx))
+        break
 
-def testSolveMatrix():
-    '''
-    Simple tests cases.
-    First = [-5, -1, -3]
-    Second = [-3, 0, -4]
-    Besed on referenced code.
-    '''
-    # Given a 2D numpy array of 1 and 0, get its exact cover rows
-    # row0 = np.array([0, 0, 1, 1, 0, 0])
-    # row1 = np.array([1, 1, 0, 0, 0, 0])
-    # row2 = np.array([0, 1, 0, 1, 0, 0])
-    # row3 = np.array([0, 0, 1, 0, 0, 1])
-    # row4 = np.array([1, 0, 0, 0, 0, 0])
-    # row5 = np.array([0, 0, 0, 1, 1, 0])
-    # MAT = np.array([row0, row1, row2, row3, row4, row5])
-
-    # row0 = np.array([0, 0, 1, 0, 1, 1, 0])
-    # row1 = np.array([1, 0, 0, 1, 0, 0, 1])
-    # row2 = np.array([0, 1, 1, 0, 0, 1, 0])
-    # row3 = np.array([1, 0, 0, 1, 0, 0, 0])
-    # row4 = np.array([0, 1, 0, 0, 0, 0, 1])
-    # row5 = np.array([0, 0, 0, 1, 1, 0, 1])
-    # MAT = np.array([row0, row1, row2, row3, row4, row5])
-
-    # row0 = np.array([1, 0, 0, 1, 0, 0, 1])
-    # row1 = np.array([1, 0, 0, 1, 0, 0, 0])
-    # row2 = np.array([0, 0, 0, 1, 1, 0, 1])
-    # row3 = np.array([0, 0, 1, 0, 1, 1, 0])
-    # row4 = np.array([0, 1, 1, 0, 0, 1, 1])
-    # row5 = np.array([0, 1, 0, 0, 0, 0, 1])
-    # MAT = np.array([row0, row1, row2, row3, row4, row5]) # Ans = [-1, -3, -5]
-
-    row0 = np.array([1, 1, 0, 0, 0, 0])
-    row1 = np.array([0, 0, 0, 0, 1, 1])
-    row2 = np.array([0, 0, 0, 1, 1, 0])
-    row3 = np.array([1, 1, 1, 0, 0, 0])
-    row4 = np.array([0, 0, 1, 1, 0, 0])
-    row5 = np.array([0, 0, 0, 1, 1, 0])
-    row6 = np.array([1, 0, 1, 0, 1, 1])
-    MAT = np.array([row0, row1, row2, row3, row4, row5, row6]) # Ans = [-0, -1, -4]
-
-
-    MAT = addLabel(MAT)
-
-    for i in solveMatrix(MAT):
-        print(i)
-
-def testSolveMatrixSpeed(number):
-    row0 = np.array([0, 0, 1, 0, 1, 1, 0])
-    row1 = np.array([1, 0, 0, 1, 0, 0, 1])
-    row2 = np.array([0, 1, 1, 0, 0, 1, 0])
-    row3 = np.array([1, 0, 0, 1, 0, 0, 0])
-    row4 = np.array([0, 1, 0, 0, 0, 0, 1])
-    row5 = np.array([0, 0, 0, 1, 1, 0, 1])
-    MAT = np.array([row0, row1, row2, row3, row4, row5])
-
-    row0 = np.array([1, 0, 0, 1, 0, 0, 1])
-    row1 = np.array([1, 0, 0, 1, 0, 0, 0])
-    row2 = np.array([0, 0, 0, 1, 1, 0, 1])
-    row3 = np.array([0, 0, 1, 0, 1, 1, 0])
-    row4 = np.array([0, 1, 1, 0, 0, 1, 1])
-    row5 = np.array([0, 1, 0, 0, 0, 0, 1])
-    row6 = np.array([1, 0, 0, 1, 0, 0, 0])
-    MAT = np.array([row0, row1, row2, row3, row4, row5, row6]) # Ans = [6, 4, 2] [6, 4, 7]
-
-    MAT = addLabel(MAT)
-
-    for i in range(number):
-        for j in solveMatrix(MAT):
-            print(j)
-
-if __name__ == "__main__":
-    pass
-
-testSolveMatrixSpeed(1)
-
-A = np.genfromtxt("matrix.csv", delimiter=",")
-# print(A[0,0:20])
-A = A[1::,1::]
-# print(A.shape)
-# print(type(A))
-# print(A[0,0:20])
-np.random.seed(10)
-np.random.shuffle(A)
-A = A[:,0:60] # Cannot get over 62, 61x72 is 0.25s....
-
-import time
-t0 = time.time()
-for i in solveMatrix(A):
-    print(i)
-    break
-print("Total running time is {} s".format((time.time() - t0) / 1))
+    return solution
