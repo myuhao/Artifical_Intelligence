@@ -183,12 +183,19 @@ class DLX:
         return
 
     def solve(self):
+        '''
+        Function to solve the exact cover problem using
+        algorithm X and DLX structure.
+        Terminate when one solution is found.
+        Returns:
+            bool -- If a solution has been found.
+        '''
         # Base case: we covered all col.
         if self.header.r == self.header:
             print("Solution is {}".format(self.solution))
             self.SOL.append(self.solution.copy())
             # yield self.solution.copy() # NOT working!!!
-            return
+            return True
 
         # Choose the column to cover.
         minCol = self._getMinColHeaderNode()
@@ -208,7 +215,8 @@ class DLX:
                 currCol = currCol.r
 
             # Recursively solve the current DLX mesh again.
-            self.solve()
+            if self.solve() == True:
+                return True
             # Trackback step.
             self.solution.pop()
 
@@ -609,6 +617,14 @@ def testGetAns():
         break
     print("Number of solutions is {}".format(len(DLL.SOL)))
 
+def testGetOnlyOneAns():
+    A = Converter(CONST.board_6x10, CONST.petnominos)
+    mat = A.getMatrix()
+    DLL = DLX(mat)
+    DLL.solve()
+    print("Number of solutions is {}".format(len(DLL.SOL)))
+
+
 if __name__ == "__main__":
-    testGetAns()
+    testGetOnlyOneAns()
 
