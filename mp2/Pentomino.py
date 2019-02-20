@@ -100,7 +100,7 @@ if __name__ == "__main__":
     well on the pentomino set you should be fine. The TA solution is able to run
     in <15 sec for the pentominos on the 6x10 board.
     """
-    board = instances.board_6x10
+    board = instances.empty_chessboard
     pents = instances.petnominos
     sol_list = solve(board, pents)
     if check_correctness(sol_list, board, pents):
@@ -108,5 +108,22 @@ if __name__ == "__main__":
     else:
         print("FAILED...")
 
+    '''
+    petnominos:             ALL PASSED!
+        board_6x10:         passed in 1.8s
+        board_3x20:         passed in 0.8s
+        board_5x12:         passed in 1.4s
+        empty_chessboard:   passed in 1.3s
+    trinominos:             To be run
+        board_6x10:         passed in 1.8s
+        board_3x20:         passed in 0.8s
+        board_5x12:         passed in 1.4s
+        empty_chessboard:   passed in 1.3s
+    dominos:                To be run
+        board_6x10:         passed in 1.8s
+        board_3x20:         passed in 0.8s
+        board_5x12:         passed in 1.4s
+        empty_chessboard:   passed in 1.3s
+    '''
 
 
