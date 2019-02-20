@@ -516,18 +516,55 @@ def testFinalMatrix():
     A = Converter(CONST.board_6x10, CONST.petnominos)
     print(A.getMatrix().shape)
 
-def testAll():
+def test6x10SolNum():
+    '''
+    Expect: 9356 solutions
+    Accutal: 9356 solutions
+    Save answer to a new CSV next time.
+    '''
     A = Converter(CONST.board_6x10, CONST.petnominos)
     mat = A.getMatrix()
-    # for i in range(72):
-    #     print(np.max(mat[:,i]) == 1)
-    # for i in range(mat.shape[0]):
-    #     print(np.sum(mat[i,:]) == 6)
     DLL = DLX(mat)
     DLL.solve()
     for i in DLL.SOL:
         print(i)
 
+def test3x20():
+    '''
+    Expect: 8 solutions
+    Accutal: 8  solutions
+    Save answer to a new CSV next time.
+    '''
+    A = Converter(CONST.board_3x20, CONST.petnominos)
+    mat = A.getMatrix()
+    DLL = DLX(mat)
+    DLL.solve()
+    for i in DLL.SOL:
+        print(i)
+    print("Number of solutions is {}".format(len(DLL.SOL)))
+
+def testHoles():
+    '''
+    Expect: 520? solutions
+    Acctual: 520 solutions
+    '''
+    A = Converter(CONST.empty_chessboard, CONST.petnominos)
+    mat = A.getMatrix()
+    DLL = DLX(mat)
+    DLL.solve()
+    for i in DLL.SOL:
+        print(i)
+    print("Number of solutions is {}".format(len(DLL.SOL)))
+
+def testAll():
+    A = Converter(CONST.board_6x10, CONST.petnominos)
+    mat = A.getMatrix()
+    DLL = DLX(mat)
+    # for i in range(mat.shape[1]):
+    #     print(np.max(mat[:,i]) == 1)
+    # for i in range(mat.shape[0]):
+    #     print(np.sum(mat[i,:]) == 6)
 
 if __name__ == "__main__":
-    testAll()
+    testHoles()
+
