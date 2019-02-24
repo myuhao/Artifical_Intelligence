@@ -370,9 +370,11 @@ class Converter:
                         pentValue = flattened[np.nonzero(flattened)][0]
                         flattened /= pentValue
                         # Handle collision.
-                        if flattened.tostring() in self.npRow2Pent.keys():
-                            print("-----Key already exists-----")
-                            raise KeyError
+                        # NEW: address problem with dominos/triminos with same shape.
+                        #      We skip this and only store it for next step look up.
+                        # if flattened.tostring() in self.npRow2Pent.keys():
+                        #     print("-----Key already exists-----")
+                        #     raise KeyError
                         # Hashing using np.tostring().
                         # Generate tuple of (pi, (rowi,coli))
                         tileANS = (pi.copy(), (i,j))
@@ -391,11 +393,16 @@ class Converter:
                 newRow = np.append(IDRow, newRow)
                 newRow = newRow.reshape((1, self.nCol))
                 self.matrix = np.append(self.matrix, newRow, axis=0)
+                if newRow.tostring() in self.npRow2Pent.keys():
+                    print("--------len = 72 key collision--------")
+                    raise KeyError
+                tileANS = self.npRow2Pent[row.tostring()]
+                self.npRow2Pent[newRow.tostring()] = tileANS
             pent_idx += 1
         return self.matrix
 
     def getPent(self, ridx):
-        row = self.matrix[ridx, len(self.pents)::]
+        row = self.matrix[ridx,:]
         key = row.tostring()
         return self.npRow2Pent[key]
 
