@@ -106,10 +106,13 @@ def check():
             board = boards[i]
             p = pents[j]
             sol_list = solve(board, p)
+            print("-----------------------------")
+            print("board {}, pents {}:".format(i,j))
             if check_correctness(sol_list, board, p):
-                print("board {} pents {} PASSED!".format(i,j))
+                print("PASSED!")
             else:
-                print("board {} pents {} FAILED!".format(i,j))
+                print("FAILED!")
+            print("-----------------------------\n")
 
 if __name__ == "__main__":
     """
@@ -134,16 +137,16 @@ if __name__ == "__main__":
         board_3x20:         passed in 0.8s
         board_5x12:         passed in 1.4s
         empty_chessboard:   passed in 1.3s
-    triominos:             To be run
-        board_6x10:         passed in 3.2s
-        board_3x20:         passed in 0.8s
-        board_5x12:         passed in 1.4s
-        empty_chessboard:   passed in 1.3s
-    dominos:                To be run
-        board_6x10:         passed in 2.9s
-        board_3x20:         passed in 0.8s
-        board_5x12:         passed in 1.4s
-        empty_chessboard:   passed in 1.3s
+    triominos:              ALL PASSED!
+        board_6x10:         passed
+        board_3x20:         passed
+        board_5x12:         passed
+        empty_chessboard:   passed
+    dominos:                ALL PASSED!
+        board_6x10:         passed
+        board_3x20:         passed
+        board_5x12:         passed
+        empty_chessboard:   passed
     '''
 
 
