@@ -186,7 +186,7 @@ class DLX:
         '''
         Function to solve the exact cover problem using
         algorithm X and DLX structure.
-        Terminate when one solution is found.
+        Terminate when one solution is found
         Returns:
             bool -- If a solution has been found.
         '''
