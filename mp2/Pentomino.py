@@ -91,6 +91,26 @@ def check_correctness(sol_list, board, pents):
     return True
 
 
+def check():
+    boards = [instances.board_6x10,
+              instances.board_3x20,
+              instances.board_5x12,
+              instances.empty_chessboard]
+
+    pents = [instances.petnominos,
+             instances.triominos,
+             instances.dominos]
+
+    for i in range(len(boards)):
+        for j in range(len(pents)):
+            board = boards[i]
+            p = pents[j]
+            sol_list = solve(board, p)
+            if check_correctness(sol_list, board, p):
+                print("board {} pents {} PASSED!".format(i,j))
+            else:
+                print("board {} pents {} FAILED!".format(i,j))
+
 if __name__ == "__main__":
     """
     Run python Pentomino.py to check your solution. You can replace 'board' and
@@ -100,27 +120,27 @@ if __name__ == "__main__":
     well on the pentomino set you should be fine. The TA solution is able to run
     in <15 sec for the pentominos on the 6x10 board.
     """
-    board = instances.empty_chessboard
-    pents = instances.petnominos
-    sol_list = solve(board, pents)
-    if check_correctness(sol_list, board, pents):
-        print("PASSED!")
-    else:
-        print("FAILED...")
-
+    # board = instances.board_6x10
+    # pents = instances.petnominos
+    # sol_list = solve(board, pents)
+    # if check_correctness(sol_list, board, pents):
+    #     print("PASSED!")
+    # else:
+    #     print("FAILED...")
+    check()
     '''
     petnominos:             ALL PASSED!
         board_6x10:         passed in 1.8s
         board_3x20:         passed in 0.8s
         board_5x12:         passed in 1.4s
         empty_chessboard:   passed in 1.3s
-    trinominos:             To be run
-        board_6x10:         passed in 1.8s
+    triominos:             To be run
+        board_6x10:         passed in 3.2s
         board_3x20:         passed in 0.8s
         board_5x12:         passed in 1.4s
         empty_chessboard:   passed in 1.3s
     dominos:                To be run
-        board_6x10:         passed in 1.8s
+        board_6x10:         passed in 2.9s
         board_3x20:         passed in 0.8s
         board_5x12:         passed in 1.4s
         empty_chessboard:   passed in 1.3s
