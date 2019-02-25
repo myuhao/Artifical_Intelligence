@@ -952,26 +952,33 @@ class ultimateTicTacToe:
                     break
         isCurrBoardFinished = True if self.largeBoard[currBoardIdx] != 0 else False
 
-        if isCurrBoardFull == True or isCurrBoardFinished:
+        if isCurrBoardFull == True or isCurrBoardFinished == True:
             newBoardIdx = 0
             for i in self.largeBoard:
                 if i != 0:
                     newBoardIdx = i
-            return _ecBestMove(newBoardIdx, isMax, isMinimax)
+            return self._ecBestMove(newBoardIdx, isMax, isMinimax)
         else:
             # Do the routine
-            pass
+            return self.find_best_move(currBoardIdx, isMax, isMinimax)
 
-    def _ecMove(self, currBoardIdx):
+    def _ecUpdateLargeBoard(self):
+        '''
+        Check each board to find if there is a winner.
+        [description]
+        '''
+        pass
+
+    def _ecMove(self, currBoardIdx, isMax):
         startRow, startCol = self.globalIdx[currBoardIdx]
         # Rely on the self.find_best_move_designed() function to make the correct move.
-        bestMove = self._ecBestMove(currBoardIdx, True, True)
+        bestMove = self._ecBestMove(currBoardIdx, isMax, True)
         r = bestMove[0] + startRow
         c = bestMove[1] + startCol
         if self.board[r][c] != "_":
             print("--------Invalid move by AI--------")
             raise ValueError
-        self.board[r][c] = "X"
+        self.board[r][c] = self.maxPlayer if isMax else self.minPlayer
         nextBoardIndex = 3*(r%3)+(c%3)
         moveCoord = (r,c)
         return nextBoardIndex, moveCoord
@@ -985,10 +992,13 @@ class ultimateTicTacToe:
     def playExtraCredit(self):
         currBoardIdx = self.startBoardIdx
         winner = 0
+        isMax = True
         while self.checkMovesLeft() == True:
-            currBoardIdx, move = self._ecMove(currBoardIdx)
+            currBoardIdx, move = self._ecMove(currBoardIdx, isMax)
             if self._ecGetWinner() != 0:
                 winner = _ecGetWinner()
+                break
+            isMax = not isMax
         return winner
 
 # -----------Tests------------#
@@ -1045,11 +1055,25 @@ def testMyPredefined():
         print("The winner is minPlayer!!!")
     else:
         print("Tie. No winner:(")
+
+def testEC():
+    uttt = ultimateTicTacToe()
+    # myPlayGamePredifinedAgent(maxFirst?, isMinimaxOffensive, isMinimaxDefensive)
+    winner = uttt.playExtraCredit()
+    uttt.printGameBoard()
+
+    if winner == 1:
+        print("The winner is maxPlayer!!!")
+    elif winner == -1:
+        print("The winner is minPlayer!!!")
+    else:
+        print("Tie. No winner:(")
 #  -------------------------- #
 
 if __name__=="__main__":
     # testPredefined()
-    testMyPredefined()
+    # testMyPredefined()
+    testEC()
 
     # print(uttt.evaluatePredifined(False))
     # print(uttt.evaluatePredifined(True))
