@@ -764,7 +764,7 @@ class ultimateTicTacToe:
 
                 isDesigned = not isDesigned
             else: #min first sequence
-                best_move = self.find_best_move(currBoardIdx,True,True)
+                best_move = self.find_best_move_designed(currBoardIdx,True,True)
                 self.make_move(best_move[0],best_move[1],currBoardIdx,True)
                 if self.checkWinner() !=0:
                     winner = self.checkWinner()
@@ -777,11 +777,14 @@ class ultimateTicTacToe:
 
     def _AIMove(self, currBoardIdx):
         startRow, startCol = self.globalIdx[currBoardIdx]
-        for i in range(startRow, startRow+3):
-            for j in range(startCol, startCol+3):
-                if self.board[i][j] == "_":
-                    self.board[i][j] = "X"
-                    return 3*(i%3)+(j%3)
+        bestMove = self.find_best_move_designed(currBoardIdx, True, True)
+        r = bestMove[0] + startRow
+        c = bestMove[1] + startCol
+        if self.board[r][c] != "_":
+            print("--------Invalid move by AI--------")
+            raise ValueError
+        self.board[r][c] = "X"
+        return 3*(r%3)+(c%3)
 
     def _HumanMove(self, currBoardIdx):
         startRow, startCol = self.globalIdx[currBoardIdx]
@@ -841,27 +844,30 @@ class ultimateTicTacToe:
 if __name__=="__main__":
     uttt=ultimateTicTacToe()
 
-    uttt.board =   [['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','O','X','O','_','_','_'],
-                    ['_','_','_','_','O','_','_','_','_'],
-                    ['_','_','_','_','X','X','X','_','X'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_']]
-
     # print(uttt.evaluatePredifined(False))
     # print(uttt.evaluatePredifined(True))
 
     # gameBoards, bestMove, expandedNodes, bestValue, winner = uttt.playGamePredifinedAgent(True,False,False)
-    # uttt.printGameBoard()
-    # print(len(bestMove))
-    # if winner == 1:
-    #     print("The winner is maxPlayer!!!")
-    # elif winner == -1:
-    #     print("The winner is minPlayer!!!")
-    # else:
-    #     print("Tie. No winner:(")
 
-    uttt.playGameHuman()
+    gameBoards, bestMove, winner = uttt.playGameYourAgent()
+    uttt.printGameBoard()
+
+    if winner == 1:
+        print("The winner is maxPlayer!!!")
+    elif winner == -1:
+        print("The winner is minPlayer!!!")
+    else:
+        print("Tie. No winner:(")
+
+
+
+    # uttt.board =   [['_','_','_','_','_','_','_','_','_'],
+    #                 ['_','_','_','_','_','_','_','_','_'],
+    #                 ['_','_','_','_','_','_','_','_','_'],
+    #                 ['_','_','_','O','X','O','_','_','_'],
+    #                 ['_','_','_','_','O','_','_','_','_'],
+    #                 ['_','_','_','_','X','X','X','_','X'],
+    #                 ['_','_','_','_','_','_','_','_','_'],
+    #                 ['_','_','_','_','_','_','_','_','_'],
+    #                 ['_','_','_','_','_','_','_','_','_']]
+    # uttt.playGameHuman()
