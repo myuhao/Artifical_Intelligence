@@ -46,6 +46,9 @@ class ultimateTicTacToe:
         self.winning_sequences = [(0,1,2), (3,4,5), (6,7,8), (0,3,6), (1,4,7), (2,5,8), (0,4,8), (2,4,6)]
         self.global_board = ['_','_','_','_','_','_','_','_','_']
 
+        # Extra Credit
+        self.largeBoard = [0,0,0, 0,0,0, 0,0,0]
+
     def printGameBoard(self):
         """
         This function prints the current game board.
@@ -938,6 +941,55 @@ class ultimateTicTacToe:
                 break
             gameBoards.append(copy.deepcopy(self.board))
         return gameBoards, bestMove, winner
+
+    def _ecBestMove(self, currBoardIdx, isMax, isMinimax=True):
+        startRow, startCol = self.globalIdx[currBoardIdx]
+        isCurrBoardFull = True
+        for i in range(startRow, startRow+3):
+            for j in range(startCol, startCol+3):
+                if self.board[i][j] == "_":
+                    isCurrBoardFull = False
+                    break
+        isCurrBoardFinished = True if self.largeBoard[currBoardIdx] != 0 else False
+
+        if isCurrBoardFull == True or isCurrBoardFinished:
+            newBoardIdx = 0
+            for i in self.largeBoard:
+                if i != 0:
+                    newBoardIdx = i
+            return _ecBestMove(newBoardIdx, isMax, isMinimax)
+        else:
+            # Do the routine
+            pass
+
+    def _ecMove(self, currBoardIdx):
+        startRow, startCol = self.globalIdx[currBoardIdx]
+        # Rely on the self.find_best_move_designed() function to make the correct move.
+        bestMove = self._ecBestMove(currBoardIdx, True, True)
+        r = bestMove[0] + startRow
+        c = bestMove[1] + startCol
+        if self.board[r][c] != "_":
+            print("--------Invalid move by AI--------")
+            raise ValueError
+        self.board[r][c] = "X"
+        nextBoardIndex = 3*(r%3)+(c%3)
+        moveCoord = (r,c)
+        return nextBoardIndex, moveCoord
+
+    def _ecGetWinner(self):
+        for winSeq in self.winning_sequences:
+            if winSeq[0] == winSeq[1] == winSeq[2] != 0:
+                return winSeq[0]
+        return 0
+
+    def playExtraCredit(self):
+        currBoardIdx = self.startBoardIdx
+        winner = 0
+        while self.checkMovesLeft() == True:
+            currBoardIdx, move = self._ecMove(currBoardIdx)
+            if self._ecGetWinner() != 0:
+                winner = _ecGetWinner()
+        return winner
 
 # -----------Tests------------#
 def testHuman():
