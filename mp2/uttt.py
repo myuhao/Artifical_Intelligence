@@ -498,6 +498,49 @@ class ultimateTicTacToe:
                         self.board[row + start_row][col + start_col] = '_'
         return best_move
 
+    def _minimax(self, depth, currBoardIdx, isMax):
+        bestValue = 0
+        if depth == self.maxDepth:
+            return self.evaluatePredifined(isMax)
+
+        startRow, startCol = self.globalIdx[currBoardIdx]
+        for localRow in range(3):
+            for localCol in range(3):
+                if self.board[startRow+localRow][startCol+localCol] == "_":
+                    self.board[startRow+localRow][startCol+localCol] = self.maxPlayer if isMax else self.minPlayer
+                    nextBoardIndex = localRow*3 + localCol
+                    newValue = self._minimax(depth+1, nextBoardIndex, not isMax)
+                    if newValue > bestValue:
+                        bestValue = newValue
+        return bestValue
+
+    def _findBestMove(self, currBoardIdx, isMax, isMinimax):
+        """
+        This function use the algorithm to find the best move for the current player at the
+        designated board.
+
+        Arguments:
+            currBoardIdx: int -- board
+            isMax: bool -- Which player we are calculating. True for Max/"X", False for Min/"O"
+            isMinimax: bool -- Are we using Minimax or alphaBeta.
+
+        Returns:
+            bestMove: tuple -- The local coord of the best move in the currBoardIdx.
+        """
+        bestMove = (0,0)
+        bestValue = -inf
+        startRow, startCol = self.globalIdx[currBoardIdx]
+        for localRow in range(3):
+            for localCol in range(3):
+                if self.board[startRow+localRow][startCol+localCol] == "_":
+                    self.board[startRow+localRow][startCol+localCol] = self.maxPlayer if isMax else self.minPlayer
+                    newValue = self._minimax(1, currBoardIdx, isMax)
+                    if newValue > bestValue:
+                        bestValue = newValue
+                        bestMove = (localRow, localCol)
+                    self.board[startRow+localRow][startCol+localCol] = "_"
+        return bestMove
+
     def playGamePredifinedAgent(self,maxFirst,isMinimaxOffensive,isMinimaxDefensive):
         """
         This function implements the processes of the game of predifined offensive agent vs defensive agent.
@@ -563,6 +606,28 @@ class ultimateTicTacToe:
                 currBoardIdx = 3 * best_move[0] + best_move[1]
             i += 1
 
+        return gameBoards, bestMove, expandedNodes, bestValue, winner
+
+    def myPlayGamePredifinedAgent(self,maxFirst,isMinimaxOffensive,isMinimaxDefensive):
+        bestMove=[]
+        bestValue=[]
+        gameBoards=[]
+        winner=0
+        expandedNodes = 0
+
+        currBoardIdx = self.startBoardIdx
+        isMax = maxFirst
+        while self.checkMovesLeft() == True:
+            move = self._findBestMove(currBoardIdx, isMax, isMinimaxOffensive) # move is a local coords
+            startRow, startCol = self.globalIdx[currBoardIdx]
+            localRow = move[0]
+            localCol = move[1]
+            self.board[startRow+localRow][startCol+localCol] = self.maxPlayer if isMax else self.minPlayer
+            isMax = not isMax
+            currBoardIdx = localRow*3 + localCol
+            if self.checkWinner() != 0:
+                winner = self.checkWinner()
+                break
         return gameBoards, bestMove, expandedNodes, bestValue, winner
 
     def alphabeta_designed(self,depth,currBoardIdx,alpha,beta,isDesigned):
@@ -906,7 +971,20 @@ def testDesigned():
 
 def testPredefined():
     uttt = ultimateTicTacToe()
-    gameBoards, bestMove, expandedNodes, bestValue, winner = uttt.playGamePredifinedAgent(True,False,False)
+    gameBoards, bestMove, expandedNodes, bestValue, winner = uttt.playGamePredifinedAgent(True,True,True)
+    uttt.printGameBoard()
+
+    if winner == 1:
+        print("The winner is maxPlayer!!!")
+    elif winner == -1:
+        print("The winner is minPlayer!!!")
+    else:
+        print("Tie. No winner:(")
+
+def testMyPredefined():
+    uttt = ultimateTicTacToe()
+    # myPlayGamePredifinedAgent(maxFirst?, isMinimaxOffensive, isMinimaxDefensive)
+    gameBoards, bestMove, expandedNodes, bestValue, winner = uttt.myPlayGamePredifinedAgent(True,True,True)
     uttt.printGameBoard()
 
     if winner == 1:
@@ -918,7 +996,8 @@ def testPredefined():
 #  -------------------------- #
 
 if __name__=="__main__":
-    testHuman()
+    # testPredefined()
+    testMyPredefined()
 
     # print(uttt.evaluatePredifined(False))
     # print(uttt.evaluatePredifined(True))
