@@ -1,7 +1,7 @@
 from time import sleep
 from math import inf
 from random import randint
-import pdb
+import copy # copy.deepcopy()
 
 class ultimateTicTacToe:
     def __init__(self):
@@ -776,7 +776,19 @@ class ultimateTicTacToe:
         return gameBoards, bestMove, winner
 
     def _AIMove(self, currBoardIdx):
+        """
+        Use the designed agent to move.
+        Call function find_best_move_designed()
+        Arguments:
+            currBoardIdx: int -- The subBoard that should be modified.
+        Returns:
+            nextBoardIndex -- The index of the next board.
+            moveCoord -- The world coordinates of the move.
+        Raises:
+            ValueError -- The AI moves to a invalid position.
+        """
         startRow, startCol = self.globalIdx[currBoardIdx]
+        # Rely on the self.find_best_move_designed() function to make the correct move.
         bestMove = self.find_best_move_designed(currBoardIdx, True, True)
         r = bestMove[0] + startRow
         c = bestMove[1] + startCol
@@ -784,9 +796,19 @@ class ultimateTicTacToe:
             print("--------Invalid move by AI--------")
             raise ValueError
         self.board[r][c] = "X"
-        return 3*(r%3)+(c%3)
+        nextBoardIndex = 3*(r%3)+(c%3)
+        moveCoord = (r,c)
+        return nextBoardIndex, moveCoord
 
     def _HumanMove(self, currBoardIdx):
+        """
+        Modify the self.board once with the human input.
+        Arguments:
+            currBoardIdx: int -- The subBoard that should be modified.
+        Returns:
+            nextBoardIndex -- The index of the next board.
+            moveCoord -- The world coordinates of the move.
+        """
         startRow, startCol = self.globalIdx[currBoardIdx]
         while True:
             print("Valid row are {}-{}".format(startRow, startRow+3))
@@ -808,7 +830,9 @@ class ultimateTicTacToe:
             if rowIndex >= startRow and rowIndex < startRow+3 and colIndex >= startCol and colIndex < startCol+3:
                 if self.board[rowIndex][colIndex] == "_":
                     self.board[rowIndex][colIndex] = "O"
-                    return 3*(rowIndex%3)+(colIndex%3)
+                    nextBoardIndex = 3*(rowIndex%3)+(colIndex%3)
+                    moveCoord = (rowIndex, colIndex)
+                    return nextBoardIndex, moveCoord
                 else:
                     print("Occupied position!")
                     print()
@@ -823,6 +847,10 @@ class ultimateTicTacToe:
         bestMove(list of tuple): list of bestMove coordinates at each step
         gameBoards(list of 2d lists): list of game board positions at each move
         winner(int): 1 for maxPlayer is the winner, -1 for minPlayer is the winner, and 0 for tie.
+
+        Implemented:
+        bestMove: list of tuples - The world coordinates of each step for both human and agent.
+        gameBoards: list of 2d lists - The game board at the end of each round.
         """
         #YOUR CODE HERE
         bestMove=[]
@@ -830,25 +858,42 @@ class ultimateTicTacToe:
         winner=0
         currBoardIdx = self.startBoardIdx
         while self.checkMovesLeft() == True:
-            currBoardIdx = self._AIMove(currBoardIdx)
+            currBoardIdx, move = self._AIMove(currBoardIdx)
+            bestMove.append(move)
             if self.checkWinner() != 0:
                 print("------Game over, you lost!------")
                 break
+
             self.printGameBoard()
-            currBoardIdx = self._HumanMove(currBoardIdx)
+
+            currBoardIdx, move = self._HumanMove(currBoardIdx)
+            bestMove.append(move)
             if self.checkWinner() != 0:
                 print("-------Congraduation!-------")
                 break
+            gameBoards.append(copy.deepcopy(self.board))
         return gameBoards, bestMove, winner
 
-if __name__=="__main__":
-    uttt=ultimateTicTacToe()
+# -----------Tests------------#
+def testHuman():
+    uttt = ultimateTicTacToe()
+    uttt.playGameHuman()
 
-    # print(uttt.evaluatePredifined(False))
-    # print(uttt.evaluatePredifined(True))
+def testBoard():
+    uttt = ultimateTicTacToe()
+    uttt.board =   [['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','O','X','O','_','_','_'],
+                    ['_','_','_','_','O','_','_','_','_'],
+                    ['_','_','_','_','X','X','X','_','X'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_']]
+    return
 
-    # gameBoards, bestMove, expandedNodes, bestValue, winner = uttt.playGamePredifinedAgent(True,False,False)
-
+def testDesigned():
+    uttt = ultimateTicTacToe()
     gameBoards, bestMove, winner = uttt.playGameYourAgent()
     uttt.printGameBoard()
 
@@ -859,15 +904,21 @@ if __name__=="__main__":
     else:
         print("Tie. No winner:(")
 
+def testPredefined():
+    uttt = ultimateTicTacToe()
+    gameBoards, bestMove, expandedNodes, bestValue, winner = uttt.playGamePredifinedAgent(True,False,False)
+    uttt.printGameBoard()
 
+    if winner == 1:
+        print("The winner is maxPlayer!!!")
+    elif winner == -1:
+        print("The winner is minPlayer!!!")
+    else:
+        print("Tie. No winner:(")
+#  -------------------------- #
 
-    # uttt.board =   [['_','_','_','_','_','_','_','_','_'],
-    #                 ['_','_','_','_','_','_','_','_','_'],
-    #                 ['_','_','_','_','_','_','_','_','_'],
-    #                 ['_','_','_','O','X','O','_','_','_'],
-    #                 ['_','_','_','_','O','_','_','_','_'],
-    #                 ['_','_','_','_','X','X','X','_','X'],
-    #                 ['_','_','_','_','_','_','_','_','_'],
-    #                 ['_','_','_','_','_','_','_','_','_'],
-    #                 ['_','_','_','_','_','_','_','_','_']]
-    # uttt.playGameHuman()
+if __name__=="__main__":
+    testHuman()
+
+    # print(uttt.evaluatePredifined(False))
+    # print(uttt.evaluatePredifined(True))
