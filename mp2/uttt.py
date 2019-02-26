@@ -2,6 +2,7 @@ from time import sleep
 from math import inf
 from random import randint
 import copy # copy.deepcopy()
+import pdb
 
 class ultimateTicTacToe:
     def __init__(self):
@@ -412,7 +413,7 @@ class ultimateTicTacToe:
 
         # If this is maxPlayer
         if isMax:
-            bestValue = -inf
+            bestValue = -99999
             # Traverse all cells
             for row in range(3):
                 for col in range(3):
@@ -433,7 +434,7 @@ class ultimateTicTacToe:
                         self.board[row + start_row][col + start_col] = '_'
             return bestValue
         else:
-            bestValue = inf
+            bestValue = 99999
             # Traverse all cells
             for row in range(3):
                 for col in range(3):
@@ -466,7 +467,7 @@ class ultimateTicTacToe:
         best_move(tuple):the coordinates of the best move
         """
         start_row, start_col = self.globalIdx[currBoardIdx]
-        best_move = (0, 0)
+        best_move = (-100, -100)
         if isMax:
             player = self.maxPlayer
             opponent = self.minPlayer
@@ -499,6 +500,12 @@ class ultimateTicTacToe:
                             best_move = (row, col)
                             bestValue = move_value
                         self.board[row + start_row][col + start_col] = '_'
+        # pdb.set_trace()
+        if best_move[0] == -100:
+            # self.printGameBoard()
+            print("Attempt to call currBoardIdx {}".format(currBoardIdx))
+            print(best_move)
+            raise ValueError
         return best_move
 
     def _minimax(self, depth, currBoardIdx, isMax):
@@ -953,50 +960,77 @@ class ultimateTicTacToe:
         isCurrBoardFinished = True if self.largeBoard[currBoardIdx] != 0 else False
 
         if isCurrBoardFull == True or isCurrBoardFinished == True:
-            newBoardIdx = 0
-            for i in self.largeBoard:
-                if i != 0:
-                    newBoardIdx = i
-            return self._ecBestMove(newBoardIdx, isMax, isMinimax)
+            for i in range(len(self.largeBoard)):
+                if self.largeBoard[i] == 0:
+                    # print("newBoardIdx is {}".format(i))
+                    # print(self.largeBoard)
+                    # self.printGameBoard()
+                    # r, c = self.find_best_move(i, isMax, isMinimax)
+                    # newRow, newCol = self.globalIdx[i]
+                    # r += newRow
+                    # c += newCol
+                    # print(r,c)
+                    print(self.largeBoard)
+                    self.printGameBoard()
+                    move = self._ecBestMove(i, isMax, isMinimax)
+                    return move[0], move[1], i
         else:
             # Do the routine
-            return self.find_best_move(currBoardIdx, isMax, isMinimax)
+            move = self.find_best_move(currBoardIdx, isMax, isMinimax)
+            r = startRow + move[0]
+            c = startCol + move[1]
+            return r,c, currBoardIdx
 
-    def _ecUpdateLargeBoard(self):
+    def _finishedBoard(self, currBoardIdx):
         '''
-        Check each board to find if there is a winner.
-        [description]
+        Return the winner of the board: -1, 1, or 0
         '''
-        pass
+        # startRow, startCol = self.globalIdx[currBoardIdx]
+        localBoard = self.local_board(currBoardIdx)
+        # for row in range(startRow, startRow+3):
+        #     for col in range(startCol, startCol+3):
+        #         localBoard.append(copy.deepcopy(self.board[row][col]))
+        for i, j, k in self.winning_sequences:
+            if localBoard[i] == localBoard[j] == localBoard[k] == self.maxPlayer:
+                return 1
+            if localBoard[i] == localBoard[j] == localBoard[k] == self.minPlayer:
+                return -1
+        return 0
+
 
     def _ecMove(self, currBoardIdx, isMax):
         startRow, startCol = self.globalIdx[currBoardIdx]
         # Rely on the self.find_best_move_designed() function to make the correct move.
-        bestMove = self._ecBestMove(currBoardIdx, isMax, True)
-        r = bestMove[0] + startRow
-        c = bestMove[1] + startCol
+        r, c, temp = self._ecBestMove(currBoardIdx, isMax, True) # Use world coords.
+        # temp = 3*(r%3) + (c%3)
+
         if self.board[r][c] != "_":
             print("--------Invalid move by AI--------")
+            print(self.largeBoard)
+            print(r, c)
+            self.printGameBoard()
             raise ValueError
         self.board[r][c] = self.maxPlayer if isMax else self.minPlayer
+        self.largeBoard[temp] = self._finishedBoard(temp)
+
         nextBoardIndex = 3*(r%3)+(c%3)
         moveCoord = (r,c)
         return nextBoardIndex, moveCoord
 
     def _ecGetWinner(self):
-        for winSeq in self.winning_sequences:
-            if winSeq[0] == winSeq[1] == winSeq[2] != 0:
-                return winSeq[0]
+        for i, j, k in self.winning_sequences:
+            if self.largeBoard[i] == self.largeBoard[j] == self.largeBoard[k] != 0:
+                return self.largeBoard[i]
         return 0
 
     def playExtraCredit(self):
         currBoardIdx = self.startBoardIdx
         winner = 0
         isMax = True
-        while self.checkMovesLeft() == True:
+        while self.checkMovesLeft() == True and self._ecGetWinner() == 0:
             currBoardIdx, move = self._ecMove(currBoardIdx, isMax)
             if self._ecGetWinner() != 0:
-                winner = _ecGetWinner()
+                winner = self._ecGetWinner()
                 break
             isMax = not isMax
         return winner
@@ -1068,12 +1102,25 @@ def testEC():
         print("The winner is minPlayer!!!")
     else:
         print("Tie. No winner:(")
+
+def testFinishedBoard():
+    uttt = ultimateTicTacToe()
+    uttt.board =   [['_','_','_','_','X','X','O','O','X'],
+                    ['_','_','_','_','X','_','O','O','X'],
+                    ['_','_','_','_','_','_','X','X','X'],
+                    ['_','_','_','_','_','_','O','O','O'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_']]
+    print(uttt._finishedBoard(2))
 #  -------------------------- #
 
 if __name__=="__main__":
-    # testPredefined()
-    # testMyPredefined()
     testEC()
+    testFinishedBoard()
+    # testPredefined()
 
     # print(uttt.evaluatePredifined(False))
     # print(uttt.evaluatePredifined(True))
