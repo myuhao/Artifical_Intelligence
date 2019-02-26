@@ -87,14 +87,6 @@ class ultimateTicTacToe:
         """
         #YOUR CODE HERE
         # Set up utility scores for different players
-
-        winner = self.winnerMaxUtility
-        two_in_a_row = self.twoInARowMaxUtility
-        prevent_three_in_a_row = self.preventThreeInARowMaxUtility
-        corner = self.cornerMaxUtility
-        player = self.maxPlayer
-        opponent = self.minPlayer
-
         if isMax:
             winner = self.winnerMaxUtility
             two_in_a_row = self.twoInARowMaxUtility
@@ -143,8 +135,8 @@ class ultimateTicTacToe:
                 score += num_two_in_a_row*two_in_a_row + num_prevent_three_in_a_row*prevent_three_in_a_row
             else:
                 corners = [0, 2, 6, 8]
-                for c in corners:
-                    if curr_board[c] == player:
+                for i in corners:
+                    if curr_board[i] == player:
                         score += corner
             # return score
         # Third Rule: check for corners
@@ -155,6 +147,45 @@ class ultimateTicTacToe:
         #         if curr_board[i] == player:
         #             score += 30
         return score
+
+
+        # Loop through each local board
+        # for currBoardIdx in range(9):
+        #     curr_board = self.local_board(currBoardIdx)
+        #     # print(curr_board)
+        #     # pdb.set_trace()
+        #     for i, j, k in self.winning_sequences:
+        #             # First Rule: check if the player wins.
+        #             if curr_board[i] == curr_board[j] == curr_board[k] == player:
+        #                 return winner
+        #             # Second Rule: check for unblocked two-in-a-rows
+        #             if curr_board[i] == curr_board[j] == player:
+        #                 if curr_board[k] == '_':
+        #                     score += two_in_a_row
+        #             if curr_board[i] == curr_board[k] == player:
+        #                 if curr_board[j] == '_':
+        #                     score += two_in_a_row
+        #             if curr_board[j] == curr_board[k] == player:
+        #                 if curr_board[i] == '_':
+        #                     score += two_in_a_row
+        #             # and prevention of three in a row by the opponent
+        #             if curr_board[i] == curr_board[j] == opponent:
+        #                 if curr_board[k] == player:
+        #                     score += two_in_a_row
+        #             if curr_board[i] == curr_board[k] == opponent:
+        #                 if curr_board[j] == player:
+        #                     score += two_in_a_row
+        #             if curr_board[j] == curr_board[k] == opponent:
+        #                 if curr_board[i] == player:
+        #                     score += two_in_a_row
+        #     if score > 0:
+        #         return score
+        #     # Third Rule: check for corners
+        #     corners = [0, 2, 6, 8]
+        #     for i in corners:
+        #         if curr_board[i] == player:
+        #             score += 30
+        # return score
 
     def make_move(self, row, col, currBoardIdx, isMax):
         """
@@ -309,6 +340,7 @@ class ultimateTicTacToe:
         bestValue(float):the bestValue that current player may have
         """
         #YOUR CODE HERE
+        self.expandedNodes += 1
         if depth == self.maxDepth:
             return self.evaluatePredifined(currBoardIdx)
         # If either player wins, return best score
@@ -374,28 +406,56 @@ class ultimateTicTacToe:
         bestValue(float):the bestValue that current player may have
         """
         #YOUR CODE HERE
-        if depth >= self.maxDepth:
-            return self.evaluatePredifined(isMax)
+        self.expandedNodes += 1
+        if depth == self.maxDepth:
+            return self.evaluatePredifined(currBoardIdx)
 
-        startRow, startCol = self.globalIdx[currBoardIdx]
-        allValue = []
-        for row in range(startRow, startRow+3):
-            for col in range(startCol, startCol+3):
-                if self.board[row][col] == "_":
-                    self.board[row][col] = self.maxPlayer if isMax else self.minPlayer
-                    # allValue.append(self.evaluatePredifined(isMax))
-                    if self.checkWinner() != 0 or self.checkMovesLeft() == False:
-                        newValue = self.evaluatePredifined(isMax)
-                        self.board[row][col] = "_"
-                        return newValue
-                    nextBoardIndex = 3*(row%3) + (col%3)
-                    newValue = self.minimax(depth+1, nextBoardIndex, not isMax)
-                    allValue.append(newValue)
-                    self.board[row][col] = "_"
+
+        start_row, start_col = self.globalIdx[currBoardIdx]
+
+        # If this is maxPlayer
         if isMax:
-            return self.evaluatePredifined(isMax) if len(allValue) == 0 else max(allValue)
+            bestValue = -inf
+            # Traverse all cells
+            for row in range(3):
+                for col in range(3):
+                    if self.board[row + start_row][col + start_col] == '_':
+                        self.board[row + start_row][col + start_col] = self.maxPlayer
+                        # If either player wins, return best score
+                        if self.evaluatePredifined(currBoardIdx) == self.winnerMaxUtility or self.evaluatePredifined(currBoardIdx) == self.winnerMinUtility or not self.checkMovesLeft():
+                            self.board[row + start_row][col + start_col] = '_'
+                            return self.evaluatePredifined(currBoardIdx)
+                       # pdb.set_trace()
+                        next_board_index = 3*row + col
+                        curr_value = self.minimax(depth + 1, next_board_index, not isMax)
+                        if curr_value > bestValue:
+                            bestValue = curr_value
+                        #self.board[row + start_row][col + start_col] == '_'
+                      #  pdb.set_trace()
+                        # Undo the move
+                        self.board[row + start_row][col + start_col] = '_'
+            return bestValue
         else:
-            return self.evaluatePredifined(isMax) if len(allValue) == 0 else min(allValue)
+            bestValue = inf
+            # Traverse all cells
+            for row in range(3):
+                for col in range(3):
+                    if self.board[row + start_row][col + start_col] == '_':
+                        self.board[row + start_row][col + start_col] = self.minPlayer
+                        # If either player wins, return best score
+                        if self.evaluatePredifined(currBoardIdx) == self.winnerMaxUtility or self.evaluatePredifined(currBoardIdx) == self.winnerMinUtility or not self.checkMovesLeft():
+                            self.board[row + start_row][col + start_col] = '_'
+                            return self.evaluatePredifined(currBoardIdx)
+                        next_board_index = 3*row + col
+                        # bestValue = min(bestValue, self.minimax(depth + 1, next_board_index, not isMax))
+
+                        # Undo the move
+                        curr_value = self.minimax(depth + 1, next_board_index, not isMax)
+                        if curr_value < bestValue:
+                            bestValue = curr_value
+                        self.board[row + start_row][col + start_col] = '_'
+            return bestValue
+        return bestValue
 
     def find_best_move(self, currBoardIdx, isMax, isMinimax):
         """
@@ -409,7 +469,7 @@ class ultimateTicTacToe:
         best_move(tuple):the coordinates of the best move
         """
         start_row, start_col = self.globalIdx[currBoardIdx]
-        best_move = (-100, -100)
+        best_move = (0, 0)
         if isMax:
             player = self.maxPlayer
             opponent = self.minPlayer
@@ -442,67 +502,7 @@ class ultimateTicTacToe:
                             best_move = (row, col)
                             bestValue = move_value
                         self.board[row + start_row][col + start_col] = '_'
-        # pdb.set_trace()
-        if best_move[0] == -100:
-            # self.printGameBoard()
-            print("Attempt to call currBoardIdx {}".format(currBoardIdx))
-            print(best_move)
-            raise ValueError
-        return best_move
-
-    # def _minimax(self, depth, currBoardIdx, isMax):
-    #     bestValue = 0
-    #     if depth == self.maxDepth:
-    #         return self.evaluatePredifined(isMax)
-
-    #     startRow, startCol = self.globalIdx[currBoardIdx]
-    #     for localRow in range(3):
-    #         for localCol in range(3):
-    #             if self.board[startRow+localRow][startCol+localCol] == "_":
-    #                 self.board[startRow+localRow][startCol+localCol] = self.maxPlayer if isMax else self.minPlayer
-    #                 nextBoardIndex = localRow*3 + localCol
-    #                 newValue = self._minimax(depth+1, nextBoardIndex, not isMax)
-    #                 if newValue > bestValue:
-    #                     bestValue = newValue
-    #     return bestValue
-
-    # def _findBestMove(self, currBoardIdx, isMax, isMinimax):
-    #     """
-    #     This function use the algorithm to find the best move for the current player at the
-    #     designated board.
-
-    #     Arguments:
-    #         currBoardIdx: int -- board
-    #         isMax: bool -- Which player we are calculating. True for Max/"X", False for Min/"O"
-    #         isMinimax: bool -- Are we using Minimax or alphaBeta.
-
-    #     Returns:
-    #         bestMove: tuple -- The local coord of the best move in the currBoardIdx.
-    #     """
-    #     bestMove = (-100,1000)
-    #     bestValue = 0
-
-    #     startRow, startCol = self.globalIdx[currBoardIdx]
-    #     for row in range(startRow, startRow+3):
-    #         for col in range(startCol, startCol+3):
-    #             if self.board[row][col] == "_":
-    #                 self.board[row][col] = self.maxPlayer if isMax else self.minPlayer
-    #                 newValue = self.minimax(1, currBoardIdx, not isMax)
-
-    #                 if isMax:
-    #                     if newValue < bestValue:
-    #                         bestValue = newValue
-    #                         bestMove = (row, col)
-    #                 else:
-    #                     if newValue > bestValue:
-    #                         bestValue = newValue
-    #                         bestMove = (row, col)
-    #                 self.board[row][col] = "_"
-    #         if bestMove[1] == 1000:
-    #             print(bestValue)
-    #             raise ValueError
-    #     next_board_index = 3*(bestMove[0]%3) + (bestMove[1]%3)
-    #     return next_board_index, bestMove
+        return best_move, bestValue
 
     def playGamePredifinedAgent(self,maxFirst,isMinimaxOffensive,isMinimaxDefensive):
         """
@@ -529,45 +529,59 @@ class ultimateTicTacToe:
         expandedNodes = 0
 
         currBoardIdx = self.startBoardIdx
-        isMax = maxFirst
+        i = 0
+        while self.checkMovesLeft():
 
-        while self.checkMovesLeft() == True:
-            startRow, startCol = self.globalIdx[currBoardIdx]
-            currBoardIdx, move = self._findBestMove(currBoardIdx, isMax, True)
-            if self.board[move[0]][move[1]] != "_":
-                print(move)
+            if i%1 == 0:
                 self.printGameBoard()
-                raise ValueError
-            self.board[move[0]][move[1]] = self.maxPlayer if isMax else self.minPlayer
-            self.printGameBoard()
-            isMax = not isMax
-            if self.checkWinner() != 0:
-                winner = self.checkWinner()
-                break
+                print(self.checkWinner())
+            if maxFirst: #max first sequence
+                best_move, best_val = self.find_best_move(currBoardIdx,True,isMinimaxOffensive)
+                bestMove.append(best_move)
+                bestValue.append(best_val)
+                gameBoards.append(self.board)
+                self.make_move(best_move[0], best_move[1],currBoardIdx,True)
+                #update result arrays
 
-        return gameBoards, bestMove, expandedNodes, bestValue, winner
 
-    # def myPlayGamePredifinedAgent(self,maxFirst,isMinimaxOffensive,isMinimaxDefensive):
-        bestMove=[]
-        bestValue=[]
-        gameBoards=[]
-        winner=0
-        expandedNodes = 0
+                if self.checkWinner() != 0:
+                    winner = self.checkWinner()
+                    break
+                currBoardIdx = 3*best_move[0]+best_move[1]
 
-        currBoardIdx = self.startBoardIdx
-        isMax = maxFirst
-        while self.checkMovesLeft() == True:
-            move = self._findBestMove(currBoardIdx, isMax, isMinimaxOffensive) # move is a local coords
-            startRow, startCol = self.globalIdx[currBoardIdx]
-            localRow = move[0]
-            localCol = move[1]
-            self.board[startRow+localRow][startCol+localCol] = self.maxPlayer if isMax else self.minPlayer
-            isMax = not isMax
-            currBoardIdx = localRow*3 + localCol
-            if self.checkWinner() != 0:
-                winner = self.checkWinner()
-                break
-        return gameBoards, bestMove, expandedNodes, bestValue, winner
+                best_move, best_val = self.find_best_move(currBoardIdx,False,isMinimaxDefensive)
+                bestMove.append(best_move)
+                bestValue.append(best_val)
+                gameBoards.append(self.board)
+                self.make_move(best_move[0],best_move[1],currBoardIdx,False)
+                if self.checkWinner() != 0:
+                    winner = self.checkWinner()
+                    break
+                currBoardIdx = 3*best_move[0]+best_move[1]
+
+            else: #min first sequence
+                best_move, best_val = self.find_best_move(currBoardIdx,False,isMinimaxDefensive)
+                bestMove.append(best_move)
+                bestValue.append(best_val)
+                gameBoards.append(self.board)
+                self.make_move(best_move[0],best_move[1],currBoardIdx,False)
+                if self.checkWinner() !=0:
+                    winner = self.checkWinner()
+                    break
+                currBoardIdx = 3*best_move[0], best_move[1]
+
+                best_move, best_val = self.find_best_move(currBoardIdx, True, isMinimaxOffensive)
+                bestMove.append(best_move)
+                bestValue.append(best_val)
+                gameBoards.append(self.board)
+                self.make_move(best_move[0], best_move[1], currBoardIdx, True)
+                if self.checkWinner() != 0:
+                    winner = self.checkWinner()
+                    break
+                currBoardIdx = 3 * best_move[0] + best_move[1]
+            i += 1
+
+        return gameBoards, bestMove, self.expandedNodes, bestValue, self.checkWinner()
 
     def alphabeta_designed(self,depth,currBoardIdx,alpha,beta,isDesigned):
         """
@@ -583,6 +597,7 @@ class ultimateTicTacToe:
         bestValue(float):the bestValue that current player may have
         """
         #YOUR CODE HERE
+        self.expandedNodes += 1
         if depth == self.maxDepth:
             return self.evaluateDesigned(currBoardIdx)
         # If either player wins, return best score
@@ -641,6 +656,7 @@ class ultimateTicTacToe:
         bestValue(float):the bestValue that current player may have
         """
         #YOUR CODE HERE
+        self.expandedNodes += 1
         if depth == self.maxDepth:
             return self.evaluateDesigned(currBoardIdx)
 
@@ -649,7 +665,7 @@ class ultimateTicTacToe:
 
         # If this is maxPlayer
         if isDesigned:
-            bestValue = 99999
+            bestValue = -99999
             # Traverse all cells
             for row in range(3):
                 for col in range(3):
@@ -667,7 +683,7 @@ class ultimateTicTacToe:
                         self.board[row + start_row][col + start_col] = '_'
             return bestValue
         else:
-            bestValue = -99999
+            bestValue = 99999
             # Traverse all cells
             for row in range(3):
                 for col in range(3):
@@ -697,7 +713,7 @@ class ultimateTicTacToe:
         # pdb.set_trace()
 
         start_row, start_col = self.globalIdx[currBoardIdx]
-        best_move = (-100, -100)
+        best_move = (100, 1000)
         if isDesigned:
             player = self.minPlayer
             opponent = self.maxPlayer
@@ -730,7 +746,7 @@ class ultimateTicTacToe:
                             best_move = (row, col)
                             bestValue = move_value
                         self.board[row + start_row][col + start_col] = '_'
-        return best_move
+        return best_move, bestValue
 
     def playGameYourAgent(self):
         """
@@ -749,16 +765,21 @@ class ultimateTicTacToe:
         expandedNodes = 0
 
         currBoardIdx = self.startBoardIdx
+        # currBoardIdx =
         i = 0
         isDesigned = True
 
         while self.checkMovesLeft():
 
             if i%1 == 0:
-                self.printGameBoard()
-                print(self.checkWinner())
+                # self.printGameBoard()
+                # print(self.checkWinner())
+                pass
             if isDesigned: #max first sequence
-                best_move = self.find_best_move_designed(currBoardIdx, True,True)
+                best_move, best_val = self.find_best_move_designed(currBoardIdx, True,True)
+                bestMove.append(best_move)
+                bestValue.append(best_val)
+                gameBoards.append(self.board)
                 self.make_move(best_move[0], best_move[1],currBoardIdx,False)
                 #update result arrays
                 if self.checkWinner() != 0:
@@ -768,7 +789,10 @@ class ultimateTicTacToe:
 
                 isDesigned = not isDesigned
             else: #min first sequence
-                best_move = self.find_best_move_designed(currBoardIdx,True,True)
+                best_move, best_val = self.find_best_move(currBoardIdx,True,True)
+                bestMove.append(best_move)
+                bestValue.append(best_val)
+                gameBoards.append(self.board)
                 self.make_move(best_move[0],best_move[1],currBoardIdx,True)
                 if self.checkWinner() !=0:
                     winner = self.checkWinner()
@@ -777,7 +801,7 @@ class ultimateTicTacToe:
                 isDesigned = not isDesigned
 
             i += 1
-        return gameBoards, bestMove, winner
+        return gameBoards, bestMove, self.checkWinner()
 
     def _AIMove(self, currBoardIdx):
         """
@@ -896,7 +920,7 @@ class ultimateTicTacToe:
                     return move[0], move[1], i
         else:
             # Do the routine
-            move = self.find_best_move_designed(currBoardIdx, isMax, isMinimax)
+            move, value = self.find_best_move_designed(currBoardIdx, isMax, isMinimax)
             r = startRow + move[0]
             c = startCol + move[1]
             return r,c, currBoardIdx
@@ -1075,7 +1099,7 @@ def runPredefined(trialNumber):
         print("Play Predifined Agent")
         print("Final Board Position:")
         print("--------------------")
-        gameBoards, bestMove, expandedNodes, bestValue, winner = uttt.playGamePredifinedAgent()
+        gameBoards, bestMove, expandedNodes, bestValue, winner = uttt.playGamePredifinedAgent(True, True, True)
         uttt.printGameBoard()
         print("--------------------")
         if winner == 1:
@@ -1115,6 +1139,6 @@ if __name__=="__main__":
     # testMinimax()
     # runPredefined(1)
     runDesigned(1)
-    runEC(1)
+    # runEC(1)
     # print(uttt.evaluatePredifined(False))
     # print(uttt.evaluatePredifined(True))
