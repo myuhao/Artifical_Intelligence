@@ -568,7 +568,7 @@ class ultimateTicTacToe:
                 if self.checkWinner() !=0:
                     winner = self.checkWinner()
                     break
-                currBoardIdx = 3*best_move[0], best_move[1]
+                currBoardIdx = 3*best_move[0] + best_move[1]
 
                 best_move, best_val = self.find_best_move(currBoardIdx, True, isMinimaxOffensive)
                 bestMove.append(best_move)
@@ -801,7 +801,7 @@ class ultimateTicTacToe:
                 isDesigned = not isDesigned
 
             i += 1
-        return gameBoards, bestMove, self.checkWinner()
+        return gameBoards, bestMove, self.checkWinner(), self.expandedNodes
 
     def _AIMove(self, currBoardIdx):
         """
@@ -817,7 +817,7 @@ class ultimateTicTacToe:
         """
         startRow, startCol = self.globalIdx[currBoardIdx]
         # Rely on the self.find_best_move_designed() function to make the correct move.
-        bestMove = self.find_best_move_designed(currBoardIdx, True, True)
+        bestMove, bestValue = self.find_best_move_designed(currBoardIdx, True, True)
         r = bestMove[0] + startRow
         c = bestMove[1] + startCol
         if self.board[r][c] != "_":
@@ -900,7 +900,7 @@ class ultimateTicTacToe:
                 print("-------Congraduation!-------")
                 break
             gameBoards.append(copy.deepcopy(self.board))
-            self.printGameBoard()
+        self.printGameBoard()
         return gameBoards, bestMove, winner
 
     def _ecBestMove(self, currBoardIdx, isMax, isMinimax=True):
@@ -1120,7 +1120,7 @@ def runDesigned(trialNumber):
         print("Play Designed Agent")
         print("Final Board Position:")
         print("--------------------")
-        gameBoards, bestMove, winner = uttt.playGameYourAgent()
+        gameBoards, bestMove, winner, numNodes = uttt.playGameYourAgent()
         uttt.printGameBoard()
         print("--------------------")
         if winner == 1:
@@ -1130,6 +1130,7 @@ def runDesigned(trialNumber):
             print("The winner is minPlayer!!!")
         else:
             print("Tie. No winner:(")
+        print("Expanded {} nodes".format(uttt.expandedNodes))
     print("In {} games, max won {}, win rate is {}".format(trialNumber, wins, wins/trialNumber))
 #  -------------------------- #
 
@@ -1138,7 +1139,8 @@ if __name__=="__main__":
     # testFinishedBoard()
     # testMinimax()
     # runPredefined(1)
-    runDesigned(1)
+    # runDesigned(10)
+    testHuman()
     # runEC(1)
     # print(uttt.evaluatePredifined(False))
     # print(uttt.evaluatePredifined(True))
