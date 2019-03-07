@@ -114,6 +114,60 @@ def check():
                 print("FAILED!")
             print("-----------------------------\n")
 
+def T():
+    '''
+    Unknown test cases.
+    Suspect same mistake in the cross test case.
+    '''
+    t_pents = instances.petnominos[5]
+    pent = []
+    for i in range(12):
+        pent.append(t_pents.copy())
+    board = instances.board_3x20
+    pent = instances.petnominos
+    sol_list = solve(board, pent)
+    if check_correctness(sol_list, board, pent):
+        print("PASSED!")
+    else:
+        print("FAILED!")
+
+def long_hole():
+    '''
+    FAILED, expected 6 solutions.
+    '''
+    board = np.ones((3,21))
+    board[1,4] = 0
+    board[1,10] = 0
+    board[1,16] = 0
+    pent = instances.petnominos
+    sol_list = solve(board, pent)
+    print(sol_list)
+    if check_correctness(sol_list, board, pent):
+        print("PASSED!")
+    else:
+        print("FAILED!")
+
+def cross():
+    '''
+    FAILED, error in generating the matrix.
+    Mistakely used self.board[0] to convert 2d coord to 1d idx.
+    Fixed in Converter._getAllPosition(self, pent)
+    '''
+    board = np.ones((14,9))
+    board[0:3, 0:3] = 0
+    board[0:3, -3::] = 0
+    board[6::, 0:3] = 0
+    board[6::,-3::] = 0
+
+    pent = instances.petnominos
+    sol_list = solve(board, pent)
+    if check_correctness(sol_list, board, pent):
+        print("PASSED!")
+    else:
+        print("FAILED!")
+
+
+
 if __name__ == "__main__":
     """
     Run python Pentomino.py to check your solution. You can replace 'board' and

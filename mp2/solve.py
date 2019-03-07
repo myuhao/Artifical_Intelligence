@@ -215,6 +215,7 @@ class DLX:
                 currCol = currCol.r
 
             # Recursively solve the current DLX mesh again.
+            # self.solve()
             if self.solve() == True:
                 return True
             # Trackback step.
@@ -336,7 +337,7 @@ class Converter:
             for j in range(len(self.board[i])):
                 if self.board[i,j] == self.HOLEVAL:
                     holes.append((i,j))
-                    holeIdx.append(self.board.shape[0]*i+j)
+                    holeIdx.append(self.board.shape[1]*i+j) #### BUG HERE, index conversion errpr
         '''
         First add the value of the pent to the board if possible.
         Then check if "0"/holes changed value.
@@ -364,7 +365,10 @@ class Converter:
                                 isInTheHole = True
                     if isInTheHole == False:
                         flattened = copy_board.flatten()
-                        flattened = np.delete(flattened, holeIdx)
+                        mask = np.ones(len(flattened), dtype=bool)
+                        mask[[holeIdx]] = False
+                        flattened = flattened[mask,...]
+
                         # Renormalized to 1.
                         flattened -= 1
                         pentValue = flattened[np.nonzero(flattened)][0]
