@@ -3,12 +3,14 @@ import numpy as np
 class NaiveBayes(object):
 	def __init__(self,num_class,feature_dim,num_value):
 		"""Initialize a naive bayes model.
+
 		This function will initialize prior and likelihood, where
 		prior is P(class) with a dimension of (# of class,)
 			that estimates the empirical frequencies of different classes in the training set.
 		likelihood is P(F_i = f | class) with a dimension of
 			(# of features/pixels per image, # of possible values per pixel, # of class),
 			that computes the probability of every pixel location i being value f for every class label.
+
 		Args:
 		    num_class(int): number of classes to classify
 		    feature_dim(int): feature dimension for each example
@@ -28,22 +30,44 @@ class NaiveBayes(object):
 			self.likelihood(numpy.ndarray): traing set likelihood (in log) with a dimension of
 				(# of features/pixels per image, # of possible values per pixel, # of class).
 			You should apply Laplace smoothing to compute the likelihood.
+
 		Args:
 		    train_set(numpy.ndarray): training examples with a dimension of (# of examples, feature_dim)
 		    train_label(numpy.ndarray): training labels with a dimension of (# of examples, )
 		"""
 
 		# YOUR CODE HERE
-		pass
+		prior = np.zeros(self.prior.shape)
+		likelihood = np.zeros(self.likelihood.shape)
+
+		# Calculate the prior based on apperance in the train_label data (50000, ) set.
+		# Normalize to [0,1]
+		for label in train_label:
+			prior[label] += 1
+		prior /= np.sum(prior)
+
+		# Calculte the likelihood matrix.
+		# Dim:
+		# 	0 - (728,) Which pixel we are look at.
+		# 	1 -	(256,) Which value is being tested.
+		# 	2 - (12,)  Which class is being tested.
+		for pictureIdx in range(len(train_set)): #[0,50000], each picture.
+			for pixValIdx in range(len(train_set[pictureIdx])): # [0,728], pixVal
+				# Number of times pixel pixValIdx has value f in training examples from this class
+				likelihood[pixValIdx, train_set[pictureIdx][pixValIdx], train_label[pictureIdx]] += 1
+		likelihood /= len(train_set)
+		self.save_model(prior, likelihood)
 
 	def test(self,test_set,test_label):
 		""" Test the trained naive bayes model (self.prior and self.likelihood) on testing dataset,
 			by performing maximum a posteriori (MAP) classification.
 			The accuracy is computed as the average of correctness
 			by comparing between predicted label and true label.
+
 		Args:
 		    test_set(numpy.ndarray): testing examples with a dimension of (# of examples, feature_dim)
 		    test_label(numpy.ndarray): testing labels with a dimension of (# of examples, )
+
 		Returns:
 			accuracy(float): average accuracy value
 			pred_label(numpy.ndarray): predicted labels with a dimension of (# of examples, )
