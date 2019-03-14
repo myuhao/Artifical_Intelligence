@@ -24,6 +24,9 @@ class NaiveBayes(object):
 		self.prior = np.zeros((num_class))
 		self.likelihood = np.zeros((feature_dim,num_value,num_class))
 
+		self.prior_filename = "prior"
+		self.likelihood_filename = "likelihood"
+
 	def train(self,train_set,train_label):
 		""" Train naive bayes model (self.prior and self.likelihood) with training dataset.
 			self.prior(numpy.ndarray): training set class prior (in log) with a dimension of (# of class,),
@@ -37,14 +40,14 @@ class NaiveBayes(object):
 		"""
 
 		# YOUR CODE HERE
-		prior = np.zeros(self.prior.shape)
-		likelihood = np.zeros(self.likelihood.shape)
+		self.prior = np.zeros(self.prior.shape)
+		self.likelihood = np.zeros(self.likelihood.shape)
 
 		# Calculate the prior based on apperance in the train_label data (50000, ) set.
 		# Normalize to [0,1]
 		for label in train_label:
-			prior[label] += 1
-		prior /= np.sum(prior)
+			self.prior[label] += 1
+		self.prior /= np.sum(self.prior)
 
 		# Calculte the likelihood matrix.
 		# Dim:
@@ -54,9 +57,9 @@ class NaiveBayes(object):
 		for pictureIdx in range(len(train_set)): #[0,50000], each picture.
 			for pixValIdx in range(len(train_set[pictureIdx])): # [0,728], pixVal
 				# Number of times pixel pixValIdx has value f in training examples from this class
-				likelihood[pixValIdx, train_set[pictureIdx][pixValIdx], train_label[pictureIdx]] += 1
-		likelihood /= len(train_set)
-		self.save_model(prior, likelihood)
+				self.likelihood[pixValIdx, train_set[pictureIdx][pixValIdx], train_label[pictureIdx]] += 1
+		self.likelihood /= len(train_set)
+		self.save_model(self.prior_filename, self.likelihood_filename)
 
 	def test(self,test_set,test_label):
 		""" Test the trained naive bayes model (self.prior and self.likelihood) on testing dataset,
@@ -79,6 +82,8 @@ class NaiveBayes(object):
 		pred_label = np.zeros((len(test_set)))
 
 		pass
+
+		self.load_model(self.prior_filename, self.likelihood_filename)
 
 		return accuracy, pred_label
 
