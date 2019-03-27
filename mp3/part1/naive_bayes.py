@@ -58,7 +58,12 @@ class NaiveBayes(object):
 			for pixValIdx in range(len(train_set[pictureIdx])): # [0,728], pixVal
 				# Number of times pixel pixValIdx has value f in training examples from this class
 				self.likelihood[pixValIdx, train_set[pictureIdx][pixValIdx], train_label[pictureIdx]] += 1
-		self.likelihood /= len(train_set)
+		k = 1 # laplace smoothing
+		v = 256 # Number of possible values
+		self.likelihood += k
+		self.likelihood /= (len(train_set) + k*v)
+
+
 		self.save_model(self.prior_filename, self.likelihood_filename)
 
 	def test(self,test_set,test_label):
@@ -119,5 +124,5 @@ class NaiveBayes(object):
 	    # YOUR CODE HERE
 
 	    feature_likelihoods = np.zeros((likelihood.shape[0],likelihood.shape[2]))
-
-	    return feature_likelihoods
+	    split = likelihood[:,-128:,:]
+	    return np.sum(split, axis=1)

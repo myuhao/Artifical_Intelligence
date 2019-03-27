@@ -136,6 +136,12 @@ def test():
     NB = NaiveBayes(num_class,feature_dim,num_value)
     # Train model.
     NB.train(x_train,y_train)
+    # Feature likelihood for high intensity pixels.
+    feature_likelihoods = NB.intensity_feature_likelihoods(NB.likelihood)
+    # Visualize the feature likelihoods for high intensity pixels.
+    class_names = np.array(["T-shirt/top","Trouser","Pullover","Dress",
+        "Coat","Sandal","Shirt","Sneaker","Bag","Ankle boot"])
+    plot_visualization(feature_likelihoods, class_names, "Greys")
 
 
 if __name__ == '__main__':
