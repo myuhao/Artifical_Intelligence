@@ -113,18 +113,32 @@ def perceptronTest():
     '''
     Provded test codes for perceptron
     '''
+        # Load dataset.
+    x_train, y_train, x_test, y_test = load_dataset()
+    # Load dataset.
+    x_train, y_train, x_test, y_test = load_dataset()
+
+    # Initialize naive bayes model.
+    num_class = len(np.unique(y_train))
+    feature_dim = len(x_train[0])
+    num_value = 256
+    num_class = len(np.unique(y_train))
+    feature_dim = len(x_train[0])
+    num_value = 256
         # Initialize perceptron model.
     perceptron = MultiClassPerceptron(num_class,feature_dim)
     # Train model.
     perceptron.train(x_train,y_train)
     # Visualize the learned perceptron weights.
+    class_names = np.array(["T-shirt/top","Trouser","Pullover","Dress",
+        "Coat","Sandal","Shirt","Sneaker","Bag","Ankle boot"])
     plot_visualization(perceptron.w[:-1,:], class_names, None)
-    # Classify the test sets.
-    accuracy, y_pred = perceptron.test(x_test,y_test)
-    # Plot confusion matrix.
-    plot_confusion_matrix(y_test, y_pred, classes=class_names, normalize=True,
-                      title='Confusion matrix, with normalization')
-    plt.show()
+    # # Classify the test sets.
+    # accuracy, y_pred = perceptron.test(x_test,y_test)
+    # # Plot confusion matrix.
+    # plot_confusion_matrix(y_test, y_pred, classes=class_names, normalize=True,
+    #                   title='Confusion matrix, with normalization')
+    # plt.show()
 
 def test():
     # Load dataset.
@@ -145,5 +159,5 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    perceptronTest()
 

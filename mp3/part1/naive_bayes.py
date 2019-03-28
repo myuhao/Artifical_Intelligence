@@ -24,8 +24,8 @@ class NaiveBayes(object):
 		self.prior = np.zeros((num_class))
 		self.likelihood = np.zeros((feature_dim,num_value,num_class))
 
-		self.prior_filename = "prior"
-		self.likelihood_filename = "likelihood"
+		self.prior_filename = "prior.npy"
+		self.likelihood_filename = "likelihood.npy"
 
 	def train(self,train_set,train_label):
 		""" Train naive bayes model (self.prior and self.likelihood) with training dataset.
@@ -86,10 +86,26 @@ class NaiveBayes(object):
 		accuracy = 0
 		pred_label = np.zeros((len(test_set)))
 
-		pass
-
 		self.load_model(self.prior_filename, self.likelihood_filename)
 
+		for i in range(len(test_set)):
+			test_img = test_set[i]
+			classes = np.zeros(self.num_class)
+			for j in range(self.num_class):
+				classes[j] += self.prior[j]
+				for k in range(self.feature_dim):
+					classes[j] += np.log(self.likelihood[k][test_img[k]][j])
+			argmax = -float("inf")
+			max_idx = 0
+			for a in range(self.num_class):
+				if classes[a] > argmax:
+					argmax = classes[a]
+					max_idx = a
+
+			pred_label[i] = max_idx
+			if max_idx == test_label[i]:
+				accuracy += 1
+		accuracy /= len(test_set)
 		return accuracy, pred_label
 
 
@@ -123,6 +139,5 @@ class NaiveBayes(object):
 	    """
 	    # YOUR CODE HERE
 
-	    feature_likelihoods = np.zeros((likelihood.shape[0],likelihood.shape[2]))
 	    split = likelihood[:,-128:,:]
 	    return np.sum(split, axis=1)
