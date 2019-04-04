@@ -13,7 +13,7 @@ if __name__ == '__main__':
     x_test = (x_test - np.mean(x_test, axis=0))/np.std(x_test, axis=0)
     y_test = np.load("data/y_test.npy")
 
-    load_weights = False #set to True if you want to use saved weights
+    load_weights = True #set to True if you want to use saved weights
 
     if load_weights:
         w1 = np.load('w1.npy')
@@ -31,7 +31,7 @@ if __name__ == '__main__':
         w3, b3 = init_weights(256, 256)
         w4, b4 = init_weights(256, 10)
 
-    w1, w2, w3, w4, b1, b2, b3, b4, losses = minibatch_gd(30, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, 10)
+    # w1, w2, w3, w4, b1, b2, b3, b4, losses = minibatch_gd(30, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, 10)
     np.save('w1', w1)
     np.save('w2', w2)
     np.save('w3', w3)

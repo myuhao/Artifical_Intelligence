@@ -67,20 +67,102 @@ def minibatch_gd(epoch, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, num_cl
         The confusion matrix won't be autograded but necessary in report.
 """
 def test_nn(w1, w2, w3, w4, b1, b2, b3, b4, x_test, y_test, num_classes):
-    y_test = y_test
     classification = four_nn(w1, w2, w3, w4, b1, b2, b3, b4, x_test, y_test, test=True)
+
     # Length = number of sample, 1 if correctly classified, 0 otherwise.
-    avg_class_rate = np.zeros(classification.shape)
+    avg_class_rate = np.zeros(y_test.shape)
     avg_class_rate[classification==y_test] = 1
     avg_class_rate = np.sum(avg_class_rate)/len(y_test)
+
     # Length = num_classes. ith_element++ if correctly labeld as class i.
     sample_per_class = np.zeros((num_classes,))
     class_rate_per_class = np.zeros((num_classes,))
+    # Count total samples in the test.
     for i in y_test:
         sample_per_class[i] += 1
+    # Count corrected samples in the tests.
     for i in classification[classification==y_test]:
         class_rate_per_class[i] += 1
     class_rate_per_class /= sample_per_class
+#### -------------- Plot Confusion Matrix ------------------------------
+    if False:
+        import matplotlib.pyplot as plt
+        from sklearn.metrics import confusion_matrix
+        from sklearn.utils.multiclass import unique_labels
+
+        class_names = np.array(["T-shirt/top","Trouser","Pullover","Dress",
+            "Coat","Sandal","Shirt","Sneaker","Bag","Ankle boot"])
+        cm = confusion_matrix(y_test, classification)
+        classAccuracy = np.zeros((len(np.unique(y_test)),))
+        for i in range(len(classAccuracy)):
+            classAccuracy[i] = cm[i][i]/np.sum(cm[i,:])
+
+        def plot_confusion_matrix(y_true, y_pred, classes, normalize=False, title=None, cmap=plt.cm.Blues):
+            """
+            This function prints and plots the confusion matrix.
+            Normalization can be applied by setting `normalize=True`.
+            """
+
+            if not title:
+                if normalize:
+                    title = 'Normalized confusion matrix'
+                else:
+                    title = 'Confusion matrix, without normalization'
+
+            # Compute confusion matrix
+            cm = confusion_matrix(y_true, y_pred)
+
+            classAccuracy = np.zeros((len(np.unique(y_true)),))
+            for i in range(len(classAccuracy)):
+                classAccuracy[i] = cm[i][i]/np.sum(cm[i,:])
+            print("The accuracy of each class is {}".format(classAccuracy))
+            # f = open("ClassficationRate.csv", "w")
+            # for i in classAccuracy:
+            #     f.write("{}\n".format(i))
+            # f.write("{}\n".format(np.average(classAccuracy)))
+            # f.close()
+
+            # Only use the labels that appear in the data
+            temp = unique_labels(y_true, y_pred)
+            classes = classes[temp]
+            if normalize:
+                cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+                print("Normalized confusion matrix")
+            else:
+                print('Confusion matrix, without normalization')
+
+            print(cm)
+
+            fig, ax = plt.subplots(figsize=(8,8))
+            im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+            ax.figure.colorbar(im, ax=ax)
+            # We want to show all ticks...
+            ax.set(xticks=np.arange(cm.shape[1]),
+                   yticks=np.arange(cm.shape[0]),
+                   # ... and label them with the respective list entries
+                   xticklabels=classes, yticklabels=classes,
+                   title=title,
+                   ylabel='True label',
+                   xlabel='Predicted label')
+
+            # Rotate the tick labels and set their alignment.
+            plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+                     rotation_mode="anchor")
+
+            # Loop over data dimensions and create text annotations.
+            fmt = '.2f' if normalize else 'd'
+            thresh = cm.max() / 2.
+            for i in range(cm.shape[0]):
+                for j in range(cm.shape[1]):
+                    ax.text(j, i, format(cm[i, j], fmt),
+                            ha="center", va="center",
+                            color="white" if cm[i, j] > thresh else "black")
+            fig.tight_layout()
+            return ax
+
+        plot_confusion_matrix(y_test, classification, classes=class_names, normalize=True, title="Confusion Matrix with Normalization", cmap=plt.cm.Blues)
+        plt.show()
+#### -------------- Plot Confusion Matrix ------------------------------
     return avg_class_rate, class_rate_per_class
 
 """
