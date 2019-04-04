@@ -1,2 +1,2 @@
-*.npy
+data/*.npy
 __pycache__
