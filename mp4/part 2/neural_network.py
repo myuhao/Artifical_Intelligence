@@ -26,28 +26,31 @@ def minibatch_gd(epoch, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, num_cl
     num_sample = len(y_train)
     # Batch size.
     batch_size = 200
-
     losses = []
+
     start_t = time.time()
     for e in range(epoch):
         e_start_t = time.time()
-        print("epoch {} starts.".format(e))
+
         # Shuffle data
         if shuffle == True:
             # Creating random index to shuffle the training set.
             p = np.random.permutation(num_sample)
             x_train = x_train[p,:]
             y_train = y_train[p]
+
         loss = 0
         for i in range(int(num_sample/batch_size)):
             x = x_train[i*batch_size:(i+1)*batch_size,:]
             y = y_train[i*batch_size:(i+1)*batch_size]
             loss += four_nn(w1, w2, w3, w4, b1, b2, b3, b4, x, y, test=False)
         losses.append(loss)
+
         e_end_t = time.time()
-        print("epoch {} takes {:.2f} s".format(e, e_end_t - e_start_t))
+        print("epoch {} took {:.2f} s".format(e, e_end_t - e_start_t))
     end_t = time.time()
     print("Total time is {:.2f} min, average {:.2f} s/epoch".format((end_t - start_t)/60, (end_t - start_t)/epoch))
+
     return w1, w2, w3, w4, b1, b2, b3, b4, losses
 
 """
@@ -84,6 +87,7 @@ def test_nn(w1, w2, w3, w4, b1, b2, b3, b4, x_test, y_test, num_classes):
     for i in classification[classification==y_test]:
         class_rate_per_class[i] += 1
     class_rate_per_class /= sample_per_class
+
 #### -------------- Plot Confusion Matrix ------------------------------
     if False:
         import matplotlib.pyplot as plt
@@ -163,6 +167,7 @@ def test_nn(w1, w2, w3, w4, b1, b2, b3, b4, x_test, y_test, num_classes):
         plot_confusion_matrix(y_test, classification, classes=class_names, normalize=True, title="Confusion Matrix with Normalization", cmap=plt.cm.Blues)
         plt.show()
 #### -------------- Plot Confusion Matrix ------------------------------
+
     return avg_class_rate, class_rate_per_class
 
 """
@@ -192,6 +197,7 @@ def four_nn(w1, w2, w3, w4, b1, b2, b3, b4, x, y, test):
     dZ1 = relu_backward(dA1, rcache1)
     dX, dw1, db1 = affine_backward(dZ1, acache1)
 
+    # Update w and b
     eta = 0.1
     w1 -= eta*dw1
     w2 -= eta*dw2

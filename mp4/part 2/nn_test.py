@@ -129,12 +129,8 @@ class TestNeuralNetwork(unittest.TestCase):
             test_loss, test_dF = cross_entropy(F, y)
             npt.assert_allclose(test_loss, loss)
             npt.assert_allclose(test_dF, dF)
-            print("test_loss is {}".format(test_loss))
-            print("loss is {}".format(loss))
-            print("%error is {}".format(np.abs(test_loss - loss)/loss))
-            diff_dF = np.abs(test_dF - dF)
-            diff_dF /= dF
-            print("max %diff in the dF mat is {:.10E}".format(np.max(diff_dF)))
+            # self.print_errors(test_loss, loss, "loss")
+            # self.print_errors(test_dF, dF, "dF")
 
     def init_weights(self, d, dp):
         return 0.1 * np.random.uniform(0.0, 1.0, (d, dp)), np.zeros(dp)
@@ -161,6 +157,10 @@ class TestNeuralNetwork(unittest.TestCase):
         real_losses = [16.47908832639923, 16.47890904710272, 16.478763562070586, 16.47862850676294, 16.47849924186475, 16.478372234884887, 16.478245914771097, 16.478119929957426, 16.477994155766012, 16.477868479188555]
         npt.assert_allclose(losses, real_losses)
 
+    def print_errors(self, res, ans, msg):
+        diff = np.abs(ans - res)
+        diff /= ans
+        print("The {} error is {:.10E}".format(msg, np.max(diff)))
 
 if __name__ == '__main__':
     unittest.main()
