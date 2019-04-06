@@ -137,7 +137,7 @@ def test_nn(w1, w2, w3, w4, b1, b2, b3, b4, x_test, y_test, num_classes):
 
             print(cm)
 
-            fig, ax = plt.subplots(figsize=(8,8))
+            fig, ax = plt.subplots()
             im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
             ax.figure.colorbar(im, ax=ax)
             # We want to show all ticks...
@@ -240,21 +240,20 @@ def affine_backward(dZ, cache):
     Returns:
         dA, dW, dB -- gradients with respect to loss
     '''
-    A = cache[0]
-    W = cache[1]
-    b = cache[2]
+    A, W, b = cache
     dA = dZ @ W.T
     dW = A.T @ dZ
     dB = np.sum(dZ, axis=0)
     return dA, dW, dB
 
 def relu_forward(Z):
-    return np.clip(Z, 0, np.inf), Z
+    cache = Z
+    Z[Z < 0] = 0
+    return Z, cache
 
 def relu_backward(dA, cache):
-    mask = np.clip(cache, 0, np.inf)
-    mask[np.where(mask != 0)] = 1
-    return dA * mask
+    dA[cache <= 0] = 0
+    return dA
 
 def cross_entropy(F, y):
     """
@@ -268,14 +267,14 @@ def cross_entropy(F, y):
     exp_F = np.exp(F)
     # The ith element of Fiyi is F[i, true_label_idx_of_row_i]
     # Fiyi.shape = (n,)
-    Fiyi = F[np.arange(n), y.astype(int)]
+    Fiyi = F[np.arange(n), y.astype(np.int16)]
     # Sum all scores of the ith row.
     log_sigma_exp_Fik = np.log(np.sum(exp_F, axis=1))
-    loss = np.sum(Fiyi - log_sigma_exp_Fik)
-    loss /= -n
+    loss = np.sum(Fiyi - log_sigma_exp_Fik) / (-n)
+
     # The y[i]-th element of i-th row in dF is 1, 0 otherwise.
     dF = np.zeros(F.shape)
-    dF[np.arange(n), y.astype(int)] = 1
+    dF[np.arange(n), y.astype(np.int16)] = 1
     # (10,3) divides (10,1) to get the probability.
     dF -= exp_F / np.sum(exp_F, axis=1).reshape(n,1)
     dF /= -n
