@@ -25,13 +25,16 @@ if __name__ == '__main__':
         b2 = np.load('weights/b2.npy')
         b3 = np.load('weights/b3.npy')
         b4 = np.load('weights/b4.npy')
+        print("Loaded saved weights.")
+
     else:
         w1, b1 = init_weights(784, 256)
         w2, b2 = init_weights(256, 256)
         w3, b3 = init_weights(256, 256)
         w4, b4 = init_weights(256, 10)
+        print("Initialized new weights.")
 
-    w1, w2, w3, w4, b1, b2, b3, b4, losses = minibatch_gd(30, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, 10)
+    # w1, w2, w3, w4, b1, b2, b3, b4, losses = minibatch_gd(30, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, 10)
     np.save('weights/w1.npy', w1)
     np.save('weights/w2.npy', w2)
     np.save('weights/w3.npy', w3)

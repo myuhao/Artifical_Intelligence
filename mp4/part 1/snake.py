@@ -12,7 +12,7 @@ class SnakeEnv:
 
     def reset(self):
         return self.game.reset()
-    
+
     def get_points(self):
         return self.game.get_points()
 
@@ -27,7 +27,7 @@ class SnakeEnv:
 
     def draw(self, state, points, dead):
         snake_head_x, snake_head_y, snake_body, food_x, food_y = state
-        self.display.fill(utils.BLUE)    
+        self.display.fill(utils.BLUE)
         pygame.draw.rect( self.display, utils.BLACK,
                 [
                     utils.GRID_SIZE,
@@ -38,7 +38,7 @@ class SnakeEnv:
 
         # draw snake head
         pygame.draw.rect(
-                    self.display, 
+                    self.display,
                     utils.GREEN,
                     [
                         snake_head_x,
@@ -51,7 +51,7 @@ class SnakeEnv:
         # draw snake body
         for seg in snake_body:
             pygame.draw.rect(
-                self.display, 
+                self.display,
                 utils.GREEN,
                 [
                     seg[0],
@@ -63,7 +63,7 @@ class SnakeEnv:
             )
         # draw food
         pygame.draw.rect(
-                    self.display, 
+                    self.display,
                     utils.RED,
                     [
                         food_x,
@@ -73,7 +73,8 @@ class SnakeEnv:
                     ]
                 )
 
-        text_surface = self.font.render("Points: " + str(points), True, utils.BLACK)
+        # text_surface = self.font.render("Points: " + str(points), True, utils.BLACK)
+        text_surface = self.font.render("snake_head_x:{1}, snake_head_y:{2}".format(str(points), snake_head_x, snake_head_y), True, utils.BLACK)
         text_rect = text_surface.get_rect()
         text_rect.center = ((280),(25))
         self.display.blit(text_surface, text_rect)
@@ -84,7 +85,7 @@ class SnakeEnv:
         else:
             self.clock.tick(5)
 
-        return 
+        return
 
 
     def display(self):
@@ -97,7 +98,7 @@ class SnakeEnv:
         self.display = pygame.display.set_mode((utils.DISPLAY_SIZE, utils.DISPLAY_SIZE), pygame.HWSURFACE)
         self.draw(self.game.get_state(), self.game.get_points(), False)
         self.render = True
-            
+
 class Snake:
     def __init__(self, snake_head_x, snake_head_y, food_x, food_y):
         self.init_snake_head_x = snake_head_x
@@ -159,7 +160,7 @@ class Snake:
                 if self.snake_head_x == seg[0] and self.snake_head_y == seg[1]:
                     return True
 
-        # moving towards body direction, not allowing snake to go backwards while 
+        # moving towards body direction, not allowing snake to go backwards while
         # its body length is 1
         if len(self.snake_body) == 1:
             if old_body_head == (self.snake_head_x, self.snake_head_y):
@@ -185,7 +186,7 @@ class Snake:
     def random_food(self):
         max_x = (utils.DISPLAY_SIZE - utils.WALL_SIZE - utils.GRID_SIZE)
         max_y = (utils.DISPLAY_SIZE - utils.WALL_SIZE - utils.GRID_SIZE)
-        
+
         self.food_x = random.randint(utils.WALL_SIZE, max_x)//utils.GRID_SIZE * utils.GRID_SIZE
         self.food_y = random.randint(utils.WALL_SIZE, max_y)//utils.GRID_SIZE * utils.GRID_SIZE
 
@@ -195,10 +196,10 @@ class Snake:
 
     def check_food_on_snake(self):
         if self.food_x == self.snake_head_x and self.food_y == self.snake_head_y:
-            return True 
+            return True
         for seg in self.snake_body:
             if self.food_x == seg[0] and self.food_y == seg[1]:
                 return True
         return False
-        
-    
+
+
