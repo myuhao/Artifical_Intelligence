@@ -15,6 +15,8 @@ class Agent:
         self.Q = utils.create_q_table()
         self.N = utils.create_q_table()
 
+        self.reset()
+
     def train(self):
         self._train = True
 
@@ -46,29 +48,75 @@ class Agent:
         Tips: you need to discretize the state to the state space defined on the webpage first.
         (Note that [adjoining_wall_x=0, adjoining_wall_y=0] is also the case when snake runs out of the 480x480 board)
 
+        Rewards: +1 when your action results in getting the food (snake head position is the same as the food position), -1 when the snake dies, that is when snake head hits the wall, its body segment or the head tries to move towards its adjacent body segment (moving backwards). -0.1 otherwise (does not die nor get food).
         '''
 
-        return np.argmax(self.get_action_idx(state), axis=0)
+        # Index of the current state.
+        curr_state_idx = self._discretizeState(state)
 
-    def get_action_scores(self, state):
+        # If testing, just return the action with max Q value with respect to the current state.
+        if not self._train:
+            # Testing, use Q_table alone.
+            action = self.actions[self._myargmax(self.Q[curr_state_idx])]
+            self.a = action
+            self.s = state
+            return action
+
+        # Handle the first state.
+        if self.s == None:
+            self.s = state
+            self.a = self.actions[self._myargmax(self._explorationFunc(curr_state_idx))]
+            return self.a
+
+        # Index of the pervious state stored in self.s
+        prev_state_idx = self._discretizeState(self.s)
+
+        # Check if last action resulted food.
+        getFood = self._handleFood(self.s, self.a)
+
+        # Reward
+        R_s = 0
+        if dead:
+            R_s = -1
+        elif getFood:
+            R_s = +1
+        else:
+            R_s = -0.1
+
+        # Update the Q_table.
+        alpha = self.C /(self.C + self.N[prev_state_idx][self.a])
+        max_expected = np.max(self.Q[curr_state_idx])
+        self.Q[prev_state_idx][self.a] += alpha * (R_s + self.gamma * max_expected - self.Q[prev_state_idx][self.a])
+
+        # Get the next action.
+        action = self.actions[self._myargmax(self._explorationFunc(curr_state_idx))]
+        self.a = action
+        self.s = state
+
+        # Update the N_table to record the action time.
+        self.N[curr_state_idx][action] += 1
+
+        return action
+
+    def _discretizeState(self, state):
         '''
-        Get the scores of each actions based on the state.
+        Discretize the state tuple into the state configuration in the Q_table.
         Arguments:
             state -- a list of [snake_head_x, snake_head_y, snake_body, food_x, food_y] from environment.
         Returns:
-            np.adarray -- Array contains the scores of the Q_table.
+            tuple -- Index of the actions scores in the Q_table.
         '''
         snake_head_x, snake_head_y, snake_body, food_x, food_y = state
 
         # Indeice of the state to be looked up in the Q_table.
-        idx_adj_wall_x = 0
-        idx_adj_wall_y = 0
-        idx_food_dir_x = 0
-        idx_food_dir_y = 0
-        idx_adj_body_top = 0
+        idx_adj_wall_x      = 0
+        idx_adj_wall_y      = 0
+        idx_food_dir_x      = 0
+        idx_food_dir_y      = 0
+        idx_adj_body_top    = 0
         idx_adj_body_bottom = 0
-        idx_adj_body_left = 0
-        idx_adj_body_right = 0
+        idx_adj_body_left   = 0
+        idx_adj_body_right  = 0
 
         # Check if there is wall next to the snake head.
         # Used logic in snake.py line 169-170.
@@ -109,10 +157,10 @@ class Agent:
 
         # Coordinates of the neighboring cells to the snake head.
         # Use utils.GRID_SIZE.
-        top     = (snake_head_x, snake_head_y + utils.GRID_SIZE)
-        bottom  = (snake_head_x, snake_head_y - utils.GRID_SIZE)
-        left    = (snake_head_x - utils.GRID_SIZE, snake_head_y)
-        right   = (snake_head_x + utils.GRID_SIZE, snake_head_y)
+        top    = (snake_head_x, snake_head_y - utils.GRID_SIZE)
+        bottom = (snake_head_x, snake_head_y + utils.GRID_SIZE)
+        left   = (snake_head_x - utils.GRID_SIZE, snake_head_y)
+        right  = (snake_head_x + utils.GRID_SIZE, snake_head_y)
 
         # Check adjoining snake body.
         for body_coord in snake_body:
@@ -125,4 +173,101 @@ class Agent:
             if body_coord == right:
                 idx_adj_body_right = 1
 
-        return self.Q[idx_adj_wall_x, idx_adj_wall_y, idx_food_dir_x, idx_food_dir_y, idx_adj_body_top, idx_adj_body_bottom, idx_adj_body_left, idx_adj_body_right, :]
+        # Return the indices as a tuple.
+        return (idx_adj_wall_x, idx_adj_wall_y, idx_food_dir_x, idx_food_dir_y, idx_adj_body_top, idx_adj_body_bottom, idx_adj_body_left, idx_adj_body_right)
+
+    def _getNextState(self, cstate, action):
+        '''
+        Given the current state and an action, get the next state.
+
+        Arguments:
+            state {[type]} -- [description]
+            action {[type]} -- [description]
+        '''
+        nstate = cstate
+        snake_head_x, snake_head_y, snake_body, food_x, food_y = cstate
+
+        # Head update logic based on snake.py Snake.move() method (Line 133).
+        delta_x = delta_y = 0
+        if action == 0:
+            delta_y = -1 * utils.GRID_SIZE
+        elif action == 1:
+            delta_y = 1 * utils.GRID_SIZE
+        elif action == 2:
+            delta_x = -1 * utils.GRID_SIZE
+        elif action == 3:
+            delta_x = 1 * utils.GRID_SIZE
+        # New head position.
+        nstate[0] += delta_x
+        nstate[1] += delta_y
+        # Hit food?
+        getFood = False
+        if nstate[0] == food_x and nstate[1] == food_y:
+            getFood = True
+
+        old_body_head = None
+        if len(snake_body) == 1:
+            old_body_head = snake_body[0]
+        snake_body.append((snake_head_x, snake_head_y))
+        if not getFood:
+            del snake_body[0]
+
+        return nstate, getFood
+
+    def _explorationFunc(self, state_idx):
+        '''
+        Based on the current state, get the scores of all the four actions using the exploration
+        function listed.
+        Arguments:
+            state       -- a list of [snake_head_x, snake_head_y, snake_body, food_x, food_y] from environment.
+        Returns:
+            np.ndarray  -- Scores of each action.
+        '''
+        R_plus = 1
+        u = self.Q[state_idx].copy()
+        n = self.N[state_idx]
+        u[n < self.Ne] = R_plus
+        return u
+
+    def _myargmax(self, a, axis=None, out=None):
+        '''
+        Get the max value index in the array.
+        If value is the same, use the one with largest index value.
+        '''
+        idx = 0
+        currMax = -np.inf
+        for i in range(len(a)):
+            if a[i] >= currMax:
+                idx = i
+                currMax = a[i]
+        return idx
+
+    def _handleFood(self, state, action):
+        # First step in the game: action is None
+        if action == None:
+            return False
+
+        snake_head_x, snake_head_y, snake_body, food_x, food_y = state
+        # Head update logic based on snake.py Snake.move() method (Line 133).
+        delta_x = delta_y = 0
+        if action == 0:
+            delta_y = -1 * utils.GRID_SIZE
+        elif action == 1:
+            delta_y = 1 * utils.GRID_SIZE
+        elif action == 2:
+            delta_x = -1 * utils.GRID_SIZE
+        elif action == 3:
+            delta_x = 1 * utils.GRID_SIZE
+
+        getFood = False
+        if snake_head_x + delta_x == food_x and snake_head_y + delta_y == food_y:
+            getFood = True
+
+        return getFood
+
+if __name__ == "__main__":
+    actions = np.arange(4)
+    agent = Agent(actions, 0, 0, 0)
+    a = np.random.randint(0, 3, (5,))
+    print(a)
+    print(agent._myargmax(a))

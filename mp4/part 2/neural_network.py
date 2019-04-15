@@ -49,7 +49,7 @@ def minibatch_gd(epoch, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, num_cl
         e_end_t = time.time()
         print("epoch {} took {:.2f} s".format(e, e_end_t - e_start_t))
     end_t = time.time()
-    print("Total time is {:.2f} min, average {:.2f} s/epoch".format((end_t - start_t)/60, (end_t - start_t)/epoch))
+    print("Total time is {:.0f} min {:.2f} s, average {:.2f} s/epoch".format((end_t - start_t)//60,(end_t - start_t)%60 ,(end_t - start_t)/epoch))
 
     return w1, w2, w3, w4, b1, b2, b3, b4, losses
 
@@ -243,6 +243,10 @@ def affine_backward(dZ, cache):
     A, W, b = cache
     dA = dZ @ W.T
     dW = A.T @ dZ
+    # dB = np.zeros(dZ.shape[1])
+    # for i in range(dZ.shape[1]):
+    #     for j in dZ[:,i]:
+    #         dB[i] += j
     dB = np.sum(dZ, axis=0)
     return dA, dW, dB
 
@@ -271,7 +275,6 @@ def cross_entropy(F, y):
     # Sum all scores of the ith row.
     log_sigma_exp_Fik = np.log(np.sum(exp_F, axis=1))
     loss = np.sum(Fiyi - log_sigma_exp_Fik) / (-n)
-
     # The y[i]-th element of i-th row in dF is 1, 0 otherwise.
     dF = np.zeros(F.shape)
     dF[np.arange(n), y.astype(np.int16)] = 1
