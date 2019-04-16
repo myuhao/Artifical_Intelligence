@@ -59,18 +59,19 @@ class Agent:
         if not self._train:
             return self.actions[self._myargmax(self.Q[curr_state_idx])]
 
-        # Handle the first state, does not update anything, just return the best action based on the Q_table.
+        # Handle the first state, only update N_table and return the best action based on the Q_table.
         if self.s == None:
             self.s = state
             self.a = self.actions[self._myargmax(self._explorationFunc(curr_state_idx))]
             self.points = points
+            self.N[curr_state_idx][self.a] += 1
             return self.a
 
         # Index of the pervious state stored in self.s
         # s in the equation
         prev_state_idx = self._discretizeState(self.s)
 
-        # Reward
+        # Reward calculation.
         R_s = 0
         if dead:
             R_s = -1
@@ -82,13 +83,12 @@ class Agent:
         # Update the Q_table.
         alpha = self.C /(self.C + self.N[prev_state_idx][self.a])
         max_expected = np.max(self.Q[curr_state_idx])
-        self.Q[prev_state_idx][self.a] = self.Q[prev_state_idx][self.a] + alpha * (R_s + self.gamma * max_expected - self.Q[prev_state_idx][self.a])
+        self.Q[prev_state_idx][self.a] += alpha * (R_s + self.gamma * max_expected - self.Q[prev_state_idx][self.a])
 
+        # Reset game if dead.
         if dead:
             self.reset()
             return self.a
-
-        self.N[prev_state_idx][self.a] += 1
 
         # Get the next action.
         action = self.actions[self._myargmax(self._explorationFunc(curr_state_idx))]
@@ -96,7 +96,8 @@ class Agent:
         self.s = state
         self.points = points
 
-        # self.N[curr_state_idx][action] += 1
+        # Update N_table with the action taken.
+        self.N[curr_state_idx][action] += 1
 
         return action
 
@@ -157,6 +158,7 @@ class Agent:
             # food_y == head_y
             idx_food_dir_y = 0
 
+        # Check ---- 
         # Coordinates of the neighboring cells to the snake head.
         # Use utils.GRID_SIZE.
         top    = (snake_head_x, snake_head_y - utils.GRID_SIZE)
