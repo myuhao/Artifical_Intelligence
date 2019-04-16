@@ -54,18 +54,15 @@ class Agent:
         # Index of the current state.
         curr_state_idx = self._discretizeState(state)
 
-        # If testing, just return the action with max Q value with respect to the current state.
+        # If testing, just return the action with max Q value with respect to the current state, use exploitation and no exploration.
         if not self._train:
-            # Testing, use Q_table alone.
-            action = self.actions[self._myargmax(self.Q[curr_state_idx])]
-            self.a = action
-            self.s = state
-            return action
+            return self.actions[self._myargmax(self.Q[curr_state_idx])]
 
         # Handle the first state, does not update anything, just return the best action based on the Q_table.
         if self.s == None:
             self.s = state
             self.a = self.actions[self._myargmax(self._explorationFunc(curr_state_idx))]
+            self.points = points
             return self.a
 
         # Index of the pervious state stored in self.s
@@ -177,44 +174,6 @@ class Agent:
         # Return the indices as a tuple.
         return (idx_adj_wall_x, idx_adj_wall_y, idx_food_dir_x, idx_food_dir_y, idx_adj_body_top, idx_adj_body_bottom, idx_adj_body_left, idx_adj_body_right)
 
-    def _getNextState(self, cstate, action):
-        '''
-        Given the current state and an action, get the next state.
-
-        Arguments:
-            state {[type]} -- [description]
-            action {[type]} -- [description]
-        '''
-        nstate = cstate
-        snake_head_x, snake_head_y, snake_body, food_x, food_y = cstate
-
-        # Head update logic based on snake.py Snake.move() method (Line 133).
-        delta_x = delta_y = 0
-        if action == 0:
-            delta_y = -1 * utils.GRID_SIZE
-        elif action == 1:
-            delta_y = 1 * utils.GRID_SIZE
-        elif action == 2:
-            delta_x = -1 * utils.GRID_SIZE
-        elif action == 3:
-            delta_x = 1 * utils.GRID_SIZE
-        # New head position.
-        nstate[0] += delta_x
-        nstate[1] += delta_y
-        # Hit food?
-        getFood = False
-        if nstate[0] == food_x and nstate[1] == food_y:
-            getFood = True
-
-        old_body_head = None
-        if len(snake_body) == 1:
-            old_body_head = snake_body[0]
-        snake_body.append((snake_head_x, snake_head_y))
-        if not getFood:
-            del snake_body[0]
-
-        return nstate, getFood
-
     def _explorationFunc(self, state_idx):
         '''
         Based on the current state, get the scores of all the four actions using the exploration
@@ -243,28 +202,6 @@ class Agent:
                 currMax = a[i]
         return idx
 
-    def _handleFood(self, state, action):
-        # First step in the game: action is None
-        if action == None:
-            return False
-
-        snake_head_x, snake_head_y, snake_body, food_x, food_y = state
-        # Head update logic based on snake.py Snake.move() method (Line 133).
-        delta_x = delta_y = 0
-        if action == 0:
-            delta_y = -1 * utils.GRID_SIZE
-        elif action == 1:
-            delta_y = 1 * utils.GRID_SIZE
-        elif action == 2:
-            delta_x = -1 * utils.GRID_SIZE
-        elif action == 3:
-            delta_x = 1 * utils.GRID_SIZE
-
-        getFood = False
-        if snake_head_x + delta_x == food_x and snake_head_y + delta_y == food_y:
-            getFood = True
-
-        return getFood
 
 if __name__ == "__main__":
     actions = np.arange(4)
