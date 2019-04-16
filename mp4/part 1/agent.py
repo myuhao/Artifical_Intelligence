@@ -84,11 +84,11 @@ class Agent:
         max_expected = np.max(self.Q[curr_state_idx])
         self.Q[prev_state_idx][self.a] = self.Q[prev_state_idx][self.a] + alpha * (R_s + self.gamma * max_expected - self.Q[prev_state_idx][self.a])
 
-        if dead:
-            self.reset()
-            return self.a
+        # if dead:
+        #     self.reset()
+        #     return self.a
 
-        self.N[prev_state_idx][self.a] += 1
+        # self.N[prev_state_idx][self.a] += 1
 
         # Get the next action.
         action = self.actions[self._myargmax(self._explorationFunc(curr_state_idx))]
@@ -96,7 +96,7 @@ class Agent:
         self.s = state
         self.points = points
 
-        # self.N[curr_state_idx][action] += 1
+        self.N[curr_state_idx][action] += 1
 
         return action
 

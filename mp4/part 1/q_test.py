@@ -90,4 +90,7 @@ class Test:
 
 if __name__ == "__main__":
     t = Test()
-    t.test(1)
+    for i in range(1, 4):
+        print("test case {}".format(i))
+        t.test(i)
+        print()
