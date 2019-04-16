@@ -25,7 +25,7 @@ class Application:
         first_eat = True
         start = time.time()
 
-        for game in range(self.train_eps):
+        for game in range(1, self.train_eps + 1):
             state = self.env.get_state()
             dead = False
             action = self.agent.act(state, 0, dead)
@@ -36,7 +36,7 @@ class Application:
                     self.agent.save_model(self.fname)
                     first_eat = False
                     print("Game {} finshed".format(game))
-                    print("Debugging model saved {}".format(self.fname))
+                    print("Debugging model saved as {}".format(self.fname))
                     return
 
                 action = self.agent.act(state, points, dead)

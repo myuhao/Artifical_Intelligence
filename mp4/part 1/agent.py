@@ -52,6 +52,7 @@ class Agent:
         '''
 
         # Index of the current state.
+        # s' in the equation
         curr_state_idx = self._discretizeState(state)
 
         # If testing, just return the action with max Q value with respect to the current state, use exploitation and no exploration.
@@ -66,6 +67,7 @@ class Agent:
             return self.a
 
         # Index of the pervious state stored in self.s
+        # s in the equation
         prev_state_idx = self._discretizeState(self.s)
 
         # Reward
@@ -80,7 +82,7 @@ class Agent:
         # Update the Q_table.
         alpha = self.C /(self.C + self.N[prev_state_idx][self.a])
         max_expected = np.max(self.Q[curr_state_idx])
-        self.Q[prev_state_idx][self.a] += alpha * (R_s + self.gamma * max_expected - self.Q[prev_state_idx][self.a])
+        self.Q[prev_state_idx][self.a] = self.Q[prev_state_idx][self.a] + alpha * (R_s + self.gamma * max_expected - self.Q[prev_state_idx][self.a])
 
         if dead:
             self.reset()
@@ -93,6 +95,8 @@ class Agent:
         self.a = action
         self.s = state
         self.points = points
+
+        # self.N[curr_state_idx][action] += 1
 
         return action
 
@@ -144,10 +148,10 @@ class Agent:
             # food_x == head_x
             idx_food_dir_x = 0
         if delta_food_y > 0:
-            # food_y right to head_y
+            # food_y bottom to head_y
             idx_food_dir_y = 2
         elif delta_food_y < 0:
-            # food_y left to head_y
+            # food_y top to head_y
             idx_food_dir_y = 1
         else:
             # food_y == head_y
@@ -204,8 +208,5 @@ class Agent:
 
 
 if __name__ == "__main__":
-    actions = np.arange(4)
-    agent = Agent(actions, 0, 0, 0)
-    a = np.random.randint(0, 3, (5,))
-    print(a)
-    print(agent._myargmax(a))
+    tuple1 = (1, 1)
+    print(tuple1 == (1,0))
