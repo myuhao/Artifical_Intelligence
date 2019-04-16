@@ -62,7 +62,7 @@ class Agent:
             self.s = state
             return action
 
-        # Handle the first state.
+        # Handle the first state, does not update anything, just return the best action based on the Q_table.
         if self.s == None:
             self.s = state
             self.a = self.actions[self._myargmax(self._explorationFunc(curr_state_idx))]
@@ -71,14 +71,11 @@ class Agent:
         # Index of the pervious state stored in self.s
         prev_state_idx = self._discretizeState(self.s)
 
-        # Check if last action resulted food.
-        getFood = self._handleFood(self.s, self.a)
-
         # Reward
         R_s = 0
         if dead:
             R_s = -1
-        elif getFood:
+        elif points > self.points:
             R_s = +1
         else:
             R_s = -0.1
@@ -88,13 +85,17 @@ class Agent:
         max_expected = np.max(self.Q[curr_state_idx])
         self.Q[prev_state_idx][self.a] += alpha * (R_s + self.gamma * max_expected - self.Q[prev_state_idx][self.a])
 
+        if dead:
+            self.reset()
+            return self.a
+
+        self.N[prev_state_idx][self.a] += 1
+
         # Get the next action.
         action = self.actions[self._myargmax(self._explorationFunc(curr_state_idx))]
         self.a = action
         self.s = state
-
-        # Update the N_table to record the action time.
-        self.N[curr_state_idx][action] += 1
+        self.points = points
 
         return action
 
