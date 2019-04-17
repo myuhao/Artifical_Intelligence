@@ -23,7 +23,7 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 def get_fname(Ne, C, gamma, avg):
-	fname = "Ne:{} C:{} gamma:{:.2f} avg:{:.5f}.npy".format(Ne, C, gamma, avg)
+	fname = "Ne-{} C-{} gamma-{:.2f} avg-{:.5f}.npy".format(Ne, C, gamma, avg)
 	return fname
 
 class Application:
@@ -115,7 +115,7 @@ class Application:
 			msg = "{},{},{},{},{},{},{},{}\n".format(self.Ne, self.C, self.gamma, avg, np.max(res), np.min(res), self.train_eps, self.test_eps)
 			f.write(msg)
 
-		fname = "./test/{}".format(get_fname(self.Ne, self.C, self.gamma, avg))
+		fname = "./points/{}".format(get_fname(self.Ne, self.C, self.gamma, avg))
 		np.save(fname, np.concatenate([res, np.array([self.train_eps])]))
 
 
@@ -216,7 +216,7 @@ def test_C():
 
 def long_test():
 	Ne = np.linspace(30, 50, 10)
-	C = np.linspace(10,50,10)
+	C = np.linspace(10,50,6)
 	gamma = [0.3, 0.5, 0.7, 0.9]
 	total = len(Ne) * len(C) * len(gamma)
 	ct = 0
@@ -272,9 +272,9 @@ if __name__ == "__main__":
 
 	# main()
 	# run_exaust()
-	# read_top_results(20)
+	read_top_results(20)
 	# plot_gamma()
-	long_test()
+	# long_test()
 
 
 '''
