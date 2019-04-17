@@ -22,6 +22,10 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+def get_fname(Ne, C, gamma, avg):
+	fname = "Ne:{} C:{} gamma:{:.2f} avg:{:.5f}.npy".format(Ne, C, gamma, avg)
+	return fname
+
 class Application:
 	def __init__(self, parameters, snake_head_x=200, snake_head_y=200, food_x=80, food_y=80, **kwargs):
 		self.Ne, self.C, self.gamma = parameters
@@ -111,6 +115,10 @@ class Application:
 			msg = "{},{},{},{},{},{},{},{}\n".format(self.Ne, self.C, self.gamma, avg, np.max(res), np.min(res), self.train_eps, self.test_eps)
 			f.write(msg)
 
+		fname = "./test/{}".format(get_fname(self.Ne, self.C, self.gamma, avg))
+		np.save(fname, np.concatenate([res, np.array([self.train_eps])]))
+
+
 	def excute(self):
 		self.train()
 		if self.finished_run:
@@ -150,8 +158,8 @@ def main():
 
 def read_top_results(top):
 	df = pd.read_csv('parameters.csv')
-
-	print(df[df['train_eps'] >= 50000].nlargest(top, 'train_eps'))
+	top_df = df[df['train_eps'] > 10000].nlargest(top, 'avg')
+	print(top_df.sort_values(by=['avg'], ascending=False))
 
 def run_exaust():
 	parameters_list = [(50, 10, 0.3), (30, 40, 0.6), (70, 70, 0.1), (30, 70, 0.1), (50, 50, 0.1), (30, 30, 0.7)]
@@ -187,6 +195,44 @@ def plot_gamma():
 	plt.scatter(gamma, avg)
 	plt.show()
 
+def test_Ne():
+	Ne = np.linspace(30, 50, 10)
+	C = 40
+	gamma = 0.5
+	for n in Ne:
+		parameters = (n, C, gamma)
+		app = Application(parameters, train_eps=50000, test_eps=1000, check_converge=True)
+		app.excute()
+
+def test_C():
+	Ne = 40
+	C = np.linspace(10,50,10)
+	gamma = 0.3
+	for c in C:
+		parameters = (Ne, c, gamma)
+		app = Application(parameters, train_eps=50000, test_eps=1000, check_converge=True)
+		app.excute()
+
+
+def long_test():
+	Ne = np.linspace(30, 50, 10)
+	C = np.linspace(10,50,10)
+	gamma = [0.3, 0.5, 0.7, 0.9]
+	total = len(Ne) * len(C) * len(gamma)
+	ct = 0
+	for n in Ne:
+		for c in C:
+			for g in gamma:
+				# Ne, C, gamma
+				parameters = (n, c, g)
+				app = Application(parameters, train_eps=50000, test_eps=1000, check_converge=True)
+				app.excute()
+				ct += 1
+				print("{}/{} finished".format(ct, total))
+				print("Parameters used: Ne-{}, C-{}, gamma-{}".format(n, c, g))
+				print("----------------------------------------------------------------------")
+				print()
+
 def visualize():
 	df = pd.read_csv('parameters.csv')
 	df = df[df['train_eps'] > 10000]
@@ -217,18 +263,6 @@ def visualize():
 	plt.scatter(gamma, avg)
 	plt.show()
 
-# def threeD_plot():
-# 	df = pd.read_csv('parameters.csv')
-# 	df = df[df['train_eps'] > 10000]
-# 	Ne = df['Ne']
-# 	C = df['C']
-# 	gamma = df['gamma']
-# 	avg = df['avg']
-
-# 	fig = plt.figure()
-# 	ax = fig.gca(projection='3d')
-
-# 	surf = ax.plot_surface()
 
 if __name__ == "__main__":
 	# # Ne, C, gamma
@@ -239,7 +273,8 @@ if __name__ == "__main__":
 	# main()
 	# run_exaust()
 	# read_top_results(20)
-	plot_gamma()
+	# plot_gamma()
+	long_test()
 
 
 '''
