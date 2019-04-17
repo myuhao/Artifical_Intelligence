@@ -158,7 +158,14 @@ def main():
 
 def read_top_results(top):
 	df = pd.read_csv('parameters.csv')
+	df0 = pd.read_csv('process_0_parameters.csv')
+	df1 = pd.read_csv('process_1_parameters.csv')
+	df2 = pd.read_csv('process_2_parameters.csv')
+	df3 = pd.read_csv('process_3_parameters.csv')
+	frames = [df, df0, df1, df2, df3]
+	df = pd.concat(frames)
 	top_df = df[df['train_eps'] > 10000].nlargest(top, 'avg')
+	top_df = top_df.drop(['npy_fname'], axis=1)
 	print(top_df.sort_values(by=['avg'], ascending=False))
 
 def run_exaust():
