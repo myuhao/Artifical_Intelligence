@@ -164,8 +164,9 @@ def read_top_results(top):
 	df3 = pd.read_csv('process_3_parameters.csv')
 	frames = [df, df0, df1, df2, df3]
 	df = pd.concat(frames)
+	df = df.drop(['npy_fname'], axis=1)
 	top_df = df[df['train_eps'] > 10000].nlargest(top, 'avg')
-	top_df = top_df.drop(['npy_fname'], axis=1)
+	# top_df = top_df.drop(['npy_fname'], axis=1)
 	print(top_df.sort_values(by=['avg'], ascending=False))
 
 def run_exaust():
@@ -242,6 +243,13 @@ def long_test():
 
 def visualize():
 	df = pd.read_csv('parameters.csv')
+	df0 = pd.read_csv('process_0_parameters.csv')
+	df1 = pd.read_csv('process_1_parameters.csv')
+	df2 = pd.read_csv('process_2_parameters.csv')
+	df3 = pd.read_csv('process_3_parameters.csv')
+	frames = [df, df0, df1, df2, df3]
+	df = pd.concat(frames)
+	df = df.drop(['npy_fname'], axis=1)
 	df = df[df['train_eps'] > 10000]
 	Ne = df['Ne']
 	C = df['C']
@@ -253,21 +261,21 @@ def visualize():
 		ax.scatter(x, avg)
 		ax.set(title=name)
 
-	# fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
-	# plot_subplot(ax1, 'Ne')
-	# plot_subplot(ax2, 'C')
-	# plot_subplot(ax3, 'gamma')
-	# fig.tight_layout()
+	fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+	plot_subplot(ax1, 'Ne')
+	plot_subplot(ax2, 'C')
+	plot_subplot(ax3, 'gamma')
+	fig.tight_layout()
 
-	C_idx = df['C'] == 30
-	gamma = gamma[C_idx]
-	avg = avg[C_idx]
+	# C_idx = df['C'] == 30
+	# gamma = gamma[C_idx]
+	# avg = avg[C_idx]
 
-	Ne_idx = df['Ne'] == 50
-	gamma = gamma[Ne_idx]
-	avg = avg[Ne_idx]
-	print(avg)
-	plt.scatter(gamma, avg)
+	# Ne_idx = df['Ne'] == 50
+	# gamma = gamma[Ne_idx]
+	# avg = avg[Ne_idx]
+	# print(avg)
+	# plt.scatter(gamma, avg)
 	plt.show()
 
 
@@ -280,6 +288,7 @@ if __name__ == "__main__":
 	# main()
 	# run_exaust()
 	read_top_results(20)
+	visualize()
 	# plot_gamma()
 	# long_test()
 

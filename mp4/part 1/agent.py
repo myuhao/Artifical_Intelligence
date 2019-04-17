@@ -1,6 +1,7 @@
 import numpy as np
 import utils
 import random
+import copy
 
 
 class Agent:
@@ -61,7 +62,7 @@ class Agent:
 
         # Handle the first state, only update N_table and return the best action based on the Q_table.
         if self.s == None:
-            self.s = state
+            self.s = self._deepcopy(state)
             self.a = self.actions[self._myargmax(self._explorationFunc(curr_state_idx))]
             self.points = points
             self.N[curr_state_idx][self.a] += 1
@@ -93,7 +94,7 @@ class Agent:
         # Get the next action.
         action = self.actions[self._myargmax(self._explorationFunc(curr_state_idx))]
         self.a = action
-        self.s = state
+        self.s = self._deepcopy(state)
         self.points = points
 
         # Update N_table with the action taken.
@@ -158,7 +159,7 @@ class Agent:
             # food_y == head_y
             idx_food_dir_y = 0
 
-        # Check ---- 
+        # Check ----
         # Coordinates of the neighboring cells to the snake head.
         # Use utils.GRID_SIZE.
         top    = (snake_head_x, snake_head_y - utils.GRID_SIZE)
@@ -208,6 +209,10 @@ class Agent:
                 currMax = a[i]
         return idx
 
+    def _deepcopy(self, state):
+        snake_head_x, snake_head_y, snake_body, food_x, food_y = state
+        snake_body_copy = copy.deepcopy(snake_body)
+        return [snake_head_x, snake_head_y, snake_body_copy, food_x, food_y]
 
 if __name__ == "__main__":
     tuple1 = (1, 1)

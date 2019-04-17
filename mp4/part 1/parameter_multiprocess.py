@@ -140,12 +140,15 @@ class Application:
         return np.isclose(slope, 0, rtol=0, atol=0.001)
 
 def run_process(parameters, name, train_eps=50000):
+    total = len(parameters)
+    ct = 0
     for p in parameters:
         app = Application(p, train_eps=train_eps, test_eps=1000, check_converge=True, fname=name)
         app.excute()
+        ct += 1
         n, c, g = p
         print("{} - Parameters used: Ne-{}, C-{}, gamma-{}".format(name, n, c, g))
-        print("----------------------------------------------------------------------")
+        print(bcolors.OKGREEN + "---------------------------------{}: {}/{}-------------------------------------".format(name, ct, total) + bcolors.ENDC)
         print()
 
 def split_parameters(Ne, C, gamma):
@@ -176,9 +179,9 @@ def split_parameters(Ne, C, gamma):
 
 def main():
 
-    Ne_list = np.linspace(30, 40, 11)
-    C_list = np.linspace(10, 40, 7)
-    gamma_list = np.linspace(0.3, 0.9, 7)
+    Ne_list = np.linspace(55, 90, 8)
+    C_list = np.linspace(55, 90, 8)
+    gamma_list = np.linspace(0.2, 0.8, 7)
 
     para_0, para_1, para_2, para_3 = split_parameters(Ne_list, C_list, gamma_list)
 
