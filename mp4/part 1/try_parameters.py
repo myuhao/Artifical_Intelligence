@@ -4,6 +4,9 @@ from pygame.locals import *
 import time
 import pandas as pd
 from scipy import stats
+from matplotlib import pyplot as plt
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 import utils
 from agent import Agent
@@ -26,6 +29,7 @@ class Application:
 		self.agent = Agent(self.env.get_actions(), self.Ne, self.C, self.gamma)
 		self.train_eps = kwargs['train_eps']
 		self.test_eps = kwargs['test_eps']
+		self.check_converge = kwargs['check_converge']
 		self.modle_fname = "temp.npy"
 		self.finished_run = False
 
@@ -65,9 +69,10 @@ class Application:
 					  	np.mean(self.points_results[-window:]),
 					  	np.max(self.points_results[-window:]),
 					  	np.min(self.points_results[-window:])))
-				if self.converge_calc(self.points_results, window):
-					self.train_eps = game
-					break
+				if self.check_converge:
+					if self.converge_calc(self.points_results, window):
+						self.train_eps = game
+						break
 
 			self.env.reset()
 
@@ -95,10 +100,11 @@ class Application:
 			points_results.append(points)
 			self.env.reset()
 
-		res = np.array(points_results)
+		self.res = np.array(points_results)
+		res = self.res
 		avg = np.mean(res)
 		print(bcolors.OKGREEN + "Testing finshed with {} episodes, time {:.2f} s".format(self.test_eps, time.time() - start_t))
-		print(bcolors.UNDERLINE + "Avg is {:.2f}".format(avg) + bcolors.ENDC)
+		print(bcolors.UNDERLINE + "Avg is {:.2f}".format(avg) + bcolors.ENDC + bcolors.ENDC)
 		print("Max is {}".format(np.max(res)))
 		print("Min is {}".format(np.min(res)))
 		with open("parameters.csv", 'a') as f:
@@ -118,7 +124,8 @@ class Application:
 		y = np.array(values[-window * init_window:])
 		x = np.linspace(np.min(y), np.max(y), len(y))
 		slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
-		print("Slope is {:.4f}".format(slope))
+		msg = "Slope is {:.4f}".format(slope)
+		print(bcolors.OKBLUE + msg + bcolors.ENDC) if slope > 0 else print(bcolors.WARNING + msg + bcolors.ENDC)
 
 		return np.isclose(slope, 0, rtol=0, atol=0.001)
 
@@ -133,7 +140,7 @@ def main():
 			for g in gamma:
 				# Ne, C, gamma
 				parameters = (n, c, g)
-				app = Application(parameters, train_eps=50000, test_eps=1000)
+				app = Application(parameters, train_eps=50000, test_eps=1000, check_converge=True)
 				app.excute()
 				ct += 1
 				print("{}/{} finished".format(ct, total))
@@ -143,16 +150,96 @@ def main():
 
 def read_top_results(top):
 	df = pd.read_csv('parameters.csv')
-	print(df.nlargest(top, 'avg'))
+
+	print(df[df['train_eps'] >= 50000].nlargest(top, 'train_eps'))
+
+def run_exaust():
+	parameters_list = [(50, 10, 0.3), (30, 40, 0.6), (70, 70, 0.1), (30, 70, 0.1), (50, 50, 0.1), (30, 30, 0.7)]
+	ct = 0
+	total = len(parameters_list)
+	for parameters in parameters_list:
+		# print(bcolors.WARNING + "Parameters used: Ne-{}, C-{}, gamma-{}".format(n, c, g) + bcolors.ENDC)
+		app = Application(parameters, train_eps=100000, test_eps=1000, check_converge=False)
+		app.excute()
+		ct += 1
+		print("{}/{} finished".format(ct, total))
+		print("----------------------------------------------------------------------")
+		print()
+
+def test_gamma():
+	gamma = np.linspace(0.15, 0.95, 9)
+	Ne = 30
+	C = 30
+	avg = []
+	for g in gamma:
+		parameters = (Ne, C, g)
+		app = Application(parameters, train_eps=50000, test_eps=1000, check_converge=True)
+		app.excute()
+
+def plot_gamma():
+	df = pd.read_csv('parameters.csv')
+	df = df[df['train_eps'] > 10000]
+	df = df[df['Ne'] == 30]
+	df = df[df['C'] == 30]
+	gamma = df['gamma']
+	avg = df['avg']
+	print(df)
+	plt.scatter(gamma, avg)
+	plt.show()
+
+def visualize():
+	df = pd.read_csv('parameters.csv')
+	df = df[df['train_eps'] > 10000]
+	Ne = df['Ne']
+	C = df['C']
+	gamma = df['gamma']
+	avg = df['avg']
+
+	def plot_subplot(ax, name):
+		x = df[name]
+		ax.scatter(x, avg)
+		ax.set(title=name)
+
+	# fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+	# plot_subplot(ax1, 'Ne')
+	# plot_subplot(ax2, 'C')
+	# plot_subplot(ax3, 'gamma')
+	# fig.tight_layout()
+
+	C_idx = df['C'] == 30
+	gamma = gamma[C_idx]
+	avg = avg[C_idx]
+
+	Ne_idx = df['Ne'] == 50
+	gamma = gamma[Ne_idx]
+	avg = avg[Ne_idx]
+	print(avg)
+	plt.scatter(gamma, avg)
+	plt.show()
+
+# def threeD_plot():
+# 	df = pd.read_csv('parameters.csv')
+# 	df = df[df['train_eps'] > 10000]
+# 	Ne = df['Ne']
+# 	C = df['C']
+# 	gamma = df['gamma']
+# 	avg = df['avg']
+
+# 	fig = plt.figure()
+# 	ax = fig.gca(projection='3d')
+
+# 	surf = ax.plot_surface()
 
 if __name__ == "__main__":
 	# # Ne, C, gamma
-	# parameters = (30, 40, 0.6)
-	# app = Application(parameters, train_eps=50000, test_eps=1000)
+	# parameters = (50, 10, 0.3)
+	# app = Application(parameters, train_eps=100000, test_eps=1000, check_converge=False)
 	# app.excute()
 
-	main()
-	read_top_results(20)
+	# main()
+	# run_exaust()
+	# read_top_results(20)
+	plot_gamma()
 
 
 '''
