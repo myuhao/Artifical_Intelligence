@@ -35,15 +35,15 @@ if __name__ == '__main__':
         print("Initialized new weights.")
 
     w1, w2, w3, w4, b1, b2, b3, b4, losses = minibatch_gd(30, w1, w2, w3, w4, b1, b2, b3, b4, x_train, y_train, 10)
-    np.save('weights/w1.npy', w1)
-    np.save('weights/w2.npy', w2)
-    np.save('weights/w3.npy', w3)
-    np.save('weights/w4.npy', w4)
+    # np.save('weights/w1.npy', w1)
+    # np.save('weights/w2.npy', w2)
+    # np.save('weights/w3.npy', w3)
+    # np.save('weights/w4.npy', w4)
 
-    np.save('weights/b1.npy', b1)
-    np.save('weights/b2.npy', b2)
-    np.save('weights/b3.npy', b3)
-    np.save('weights/b4.npy', b4)
+    # np.save('weights/b1.npy', b1)
+    # np.save('weights/b2.npy', b2)
+    # np.save('weights/b3.npy', b3)
+    # np.save('weights/b4.npy', b4)
 
     avg_class_rate, class_rate_per_class = test_nn(w1, w2, w3, w4, b1, b2, b3, b4, x_test, y_test, 10)
     print("Average clssification rate: {:.2f}%".format(avg_class_rate * 100))

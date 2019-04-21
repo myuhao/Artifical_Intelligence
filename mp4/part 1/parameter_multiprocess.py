@@ -114,7 +114,7 @@ class Application:
         np.save(fname, np.concatenate([res, np.array([self.train_eps])]))
         try:
             with open(self.fname, 'a') as f:
-                msg = "{},{},{},{},{},{},{},{},{}\n".format(self.Ne, self.C, self.gamma, avg, np.max(res), np.min(res), self.train_eps, self.test_eps, get_fname(self.Ne, self.C, self.gamma, avg))
+                msg = "{},{},{},{},{},{},{},{},{},{}\n".format(self.Ne, self.C, self.gamma, avg, np.max(res), np.min(res), self.train_eps, self.test_eps, get_fname(self.Ne, self.C, self.gamma, avg), "fixed")
                 f.write(msg)
         except FileNotFoundError:
             with open(self.fname, 'w') as f:
@@ -147,7 +147,7 @@ def run_process(parameters, name, train_eps=50000):
         app.excute()
         ct += 1
         n, c, g = p
-        print("{} - Parameters used: Ne-{}, C-{}, gamma-{}".format(name, n, c, g))
+        print("{} - Parameters used: Ne-{}, alpha-{}, gamma-{}".format(name, n, c, g))
         print(bcolors.OKGREEN + "---------------------------------{}: {}/{}-------------------------------------".format(name, ct, total) + bcolors.ENDC)
         print()
 
@@ -179,9 +179,9 @@ def split_parameters(Ne, C, gamma):
 
 def main():
 
-    Ne_list = np.linspace(55, 90, 8)
-    C_list = np.linspace(55, 90, 8)
-    gamma_list = np.linspace(0.2, 0.8, 7)
+    Ne_list = np.array([30])
+    C_list = np.arange(0.1, 1, 0.1)
+    gamma_list = np.array([0.5, 0.9])
 
     para_0, para_1, para_2, para_3 = split_parameters(Ne_list, C_list, gamma_list)
 
@@ -210,6 +210,7 @@ def main():
     p3.join()
 
 if __name__ == '__main__':
-    start_t = time.time()
-    main()
-    print(bcolors.OKGREEN + bcolors.UNDERLINE + "All process finished, total time is {:.2f}".format(time.time() - start_t) + bcolors.ENDC + bcolors.ENDC)
+    data = np.load('./points/Ne-41.111111111111114 C-42.0 gamma-0.50 avg-24.47400.npy')
+    l = len(data) - 1
+    plt.plot(np.arange(l), data[:-1], 'k.')
+    plt.show()

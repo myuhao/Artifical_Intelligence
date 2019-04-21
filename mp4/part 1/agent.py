@@ -82,7 +82,8 @@ class Agent:
             R_s = -0.1
 
         # Update the Q_table.
-        alpha = self.C /(self.C + self.N[prev_state_idx][self.a])
+        # alpha = self.C /(self.C + self.N[prev_state_idx][self.a])
+        alpha = 0.2
         max_expected = np.max(self.Q[curr_state_idx])
         self.Q[prev_state_idx][self.a] += alpha * (R_s + self.gamma * max_expected - self.Q[prev_state_idx][self.a])
 
@@ -210,10 +211,12 @@ class Agent:
         return idx
 
     def _deepcopy(self, state):
+        '''
+        Return a deep copy of the state list.
+        Do so by calling the copy.deepcopy() to the snake_body list and
+        recursively copy the tuple in it.
+        Other float values are copied directly.
+        '''
         snake_head_x, snake_head_y, snake_body, food_x, food_y = state
         snake_body_copy = copy.deepcopy(snake_body)
         return [snake_head_x, snake_head_y, snake_body_copy, food_x, food_y]
-
-if __name__ == "__main__":
-    tuple1 = (1, 1)
-    print(tuple1 == (1,0))

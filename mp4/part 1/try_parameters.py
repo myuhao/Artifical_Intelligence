@@ -158,6 +158,7 @@ def main():
 
 def read_top_results(top):
 	df = pd.read_csv('parameters.csv')
+	print(df.shape)
 	df0 = pd.read_csv('process_0_parameters.csv')
 	df1 = pd.read_csv('process_1_parameters.csv')
 	df2 = pd.read_csv('process_2_parameters.csv')
