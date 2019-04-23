@@ -3,7 +3,9 @@ import utils
 import random
 import copy
 
+
 class Agent:
+
     def __init__(self, actions, Ne, C, gamma):
         self.actions = actions
         self.Ne = Ne # used in exploration function
@@ -80,8 +82,8 @@ class Agent:
             R_s = -0.1
 
         # Update the Q_table.
-        # alpha = self.C /(self.C + self.N[prev_state_idx][self.a])
-        alpha = 0.2
+        alpha = self.C /(self.C + self.N[prev_state_idx][self.a])
+        # alpha = 0.2
         max_expected = np.max(self.Q[curr_state_idx])
         self.Q[prev_state_idx][self.a] += alpha * (R_s + self.gamma * max_expected - self.Q[prev_state_idx][self.a])
 
@@ -120,6 +122,10 @@ class Agent:
         idx_adj_body_bottom = 0
         idx_adj_body_left   = 0
         idx_adj_body_right  = 0
+        idx_body_long       = 0
+
+        if len(snake_body) >= 20:
+            idx_body_long = 1
 
         # Check if there is wall next to the snake head.
         # Used logic in snake.py line 169-170.
@@ -158,7 +164,7 @@ class Agent:
             # food_y == head_y
             idx_food_dir_y = 0
 
-
+        # Check ----
         # Coordinates of the neighboring cells to the snake head.
         # Use utils.GRID_SIZE.
         top    = (snake_head_x, snake_head_y - utils.GRID_SIZE)
@@ -178,7 +184,7 @@ class Agent:
                 idx_adj_body_right = 1
 
         # Return the indices as a tuple.
-        return (idx_adj_wall_x, idx_adj_wall_y, idx_food_dir_x, idx_food_dir_y, idx_adj_body_top, idx_adj_body_bottom, idx_adj_body_left, idx_adj_body_right)
+        return (idx_adj_wall_x, idx_adj_wall_y, idx_food_dir_x, idx_food_dir_y, idx_adj_body_top, idx_adj_body_bottom, idx_adj_body_left, idx_adj_body_right, idx_body_long)
 
     def _explorationFunc(self, state_idx):
         '''

@@ -33,7 +33,7 @@ class Application:
         self.check_converge = kwargs['check_converge']
         self.modle_fname = "temp.npy"
         self.finished_run = False
-        self.window = 1000
+        self.window = self.train_eps // 50
         self.avgPt = []
         self.tick = []
 
@@ -84,8 +84,8 @@ class Application:
         print(bcolors.OKGREEN + "Training finshed with {} episodes, time {:.2f} s".format(self.train_eps, time.time() - start_t) + bcolors.ENDC)
         self.finished_run = True
         save_data = np.array([self.tick, self.avgPt])
-        np.save("temp.npy", save_data)
-
+        np.save("100K_0.2alpha30Ne0.5gamma.npy", save_data)
+        np.save("./report/0.2alpha30Ne0.5gamma.npy", self.agent.Q)
     def test(self):
         print("Starting testing:")
         self.agent.eval()
@@ -133,23 +133,23 @@ class Application:
 
     def plot(self):
         try:
-            data = np.load('temp.npy')
+            data = np.load('100K_0.2alpha30Ne0.5gamma.npy')
             self.tick = data[0]
             self.avgPt = data[1]
             print("Load data!")
         except:
             print("Not found file")
-            pass
+            return
         plt.plot(self.tick, self.avgPt, 'k.')
         plt.xlabel("Game Number")
         plt.ylabel("Average Score")
         plt.title("The Average Scores During Training")
-        plt.savefig("Ne-30_alpha-0.2_gamma-0.5.png")
+        plt.savefig("100K_0.2alpha30Ne0.5gamma.png")
 
 
 def main():
-    parameters = (30, 34, 0.5)
-    app = Application(parameters, train_eps=50000, test_eps=1000, check_converge=False)
+    parameters = (30, 30, 0.5)
+    app = Application(parameters, train_eps=100000, test_eps=1000, check_converge=False)
     app.excute()
 
 main()

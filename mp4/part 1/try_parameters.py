@@ -252,22 +252,25 @@ def visualize():
 	df = pd.concat(frames)
 	df = df.drop(['npy_fname'], axis=1)
 	df = df[df['train_eps'] > 10000]
+	df = df[df['C'] > 4]
 	Ne = df['Ne']
 	C = df['C']
 	gamma = df['gamma']
 	avg = df['avg']
 
-	def plot_subplot(ax, name):
-		x = df[name]
-		ax.scatter(x, avg)
-		ax.set(title=name)
+	def plot_subplot(ax, Name):
+		x = df[Name]
+		title = "Performace of the Agent When Trained with Different {}".format(Name)
+		ax.scatter(x, avg, s=2, c='k')
+		ax.set(xlabel=Name)
 
-	fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+	fig, ((ax1, ax2, ax3)) = plt.subplots(1, 3, sharey='row')
 	plot_subplot(ax1, 'Ne')
 	plot_subplot(ax2, 'C')
 	plot_subplot(ax3, 'gamma')
-	fig.tight_layout()
-
+	# fig.tight_layout()
+	fig.suptitle("Performace of the Agent When Trained with Different Parameters")
+	ax1.set(ylabel="Average Scores")
 	# C_idx = df['C'] == 30
 	# gamma = gamma[C_idx]
 	# avg = avg[C_idx]
@@ -277,6 +280,7 @@ def visualize():
 	# avg = avg[Ne_idx]
 	# print(avg)
 	# plt.scatter(gamma, avg)
+	plt.savefig("./report/parameters.png")
 	plt.show()
 
 
@@ -288,7 +292,7 @@ if __name__ == "__main__":
 
 	# main()
 	# run_exaust()
-	read_top_results(20)
+	# read_top_results(20)
 	visualize()
 	# plot_gamma()
 	# long_test()
